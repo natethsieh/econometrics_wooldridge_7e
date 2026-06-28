@@ -1,0 +1,577 @@
+
+---
+title: "Chapter 4 Problems"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(wooldridge)
+```
+
+1. **Question:** Which of the following can cause the usual OLS t statistics to be invalid (that is, not to have t distributions under H0)
+    (i) Heteroskedasticity: variance of error is not constant ✅
+          - This violates one of the Gauss-Markov assumptions, leading to incorrect standard errors and thus invalid t-statistics
+
+    (ii) A sample correlation coefficient of 0.95 between two independent variables that are in the model ❌
+          - This will cause multicollinearity, which can inflate the variance of the coefficient estimates, but does not affect the validity of the t-statistics under H0
+          
+    (iii) Omitting an important explanatory variable ✅
+          - This will cause bias in the estimates, but in theory doesn’t effect the variance of the error, which is more what the t-statistic in a hypothesis test aims to do 
+
+
+2) **Question:** Consider an equation to explain salaries of CEOs in terms of annual firm sales, return on equity (roe, in percentage form), and return on the firm's stock (ros, in percentage form):
+
+    $$
+    \log(salary) = \beta_0 + \beta_1 \log(sales) + \beta_2 roe + \beta_3 ros + u
+    $$
+
+    i) In terms of model parameters, state the null hypothesis that, after controlling for sales and roe, ros has no effect on CEO salary. 
+    State the alternative that better stock market performance increases a CEO's salary. 
+    
+    $$
+    H0: \beta_3 = 0 \text{ against } H1: \beta_3 > 0 
+    $$
+    
+    ii) Using the data in CEOSAL1, the following equation was obtained by OLS:
+    
+        By what percentage is salary predicted to increase if ros increase by 50 points? Does ros have a practically large effect on salary?
+
+    $$
+    \begin{aligned}
+    \log(salary) &= 4.32 + .280 \log(sales) + 0.0174 roe + 0.00024 ros \\
+    &\quad (0.32) \quad (0.035) \quad\quad\quad\quad (0.0041) \quad\quad (0.00054) \\
+    n &= 209, \quad R^2 = 0.283
+    \end{aligned}
+    $$
+    
+        ```
+        0.00024 * 50 = 0.012 and therefore a 1.2% increase in salary. This is a fairly small practical effect.  
+        ``` 
+        
+
+    iii) Test the null hypothesis that ros has no effect on salary against the alternative that ros has a positive effect. Carry out the test at the 10% significance level
+
+    $$
+    t = (0.00024 - 0) / 0.00054 = 0.444
+    $$
+
+        Given n = 209 and we want a one-sided test at the 10% significance level; the critical value is 1.282
+
+        Therefore, the t-test fails to reject the null hypothesis at the 10% significance level. 
+
+        note: does this mean we're like 90% sure that ros doesn't not have an effect on salary? 
+        - Seems like statsheads wouldn't like this language.
+
+
+    iv) Would you include $ros$ in a final model explaining CEO compensation in terms of firm performance? Explain.
+    
+    ```
+    I would keep it in so that the small effect it *does* have won't get attributed to other variables (i.e., keeping it adds controls to the analysis). 
+    This is otherwise known as ommitted variable bias. 
+    ```
+
+3) **Question:** The variable $rdintens$ is expenditures on research and development (R&D) as a percentage of sales. Sales are measured in millions of dollars. 
+The variable profmarg is profits as a percentage of sales. 
+
+    Using the data in RDCHEM for 32 firms in the chemical industry, the following equation is estimated:
+
+    
+    $$ 
+    \begin{aligned}
+    rdintens &= .472 + .321 \log(sales) + 0.050 profmarg \\
+    &\quad (1.369) \quad (.216) \quad\quad\quad\quad (0.046) \\
+    n &= 32, \quad R^2 = 0.99
+    \end{aligned}
+    $$
+
+    i) Interpret the coefficient on $log(sales)$. In particular, if $sales$ increases by 10%, what is the estimated percentage point change in $rdintens$? Is this an economically large effect?
+    ```
+        .321 / 100 * 10 = .0321 percentage point increase in edintens, a small effect economically.
+    ```
+    ii) Test the hypothesis that R&D intensity does not change with sales against the alternative that it does increase with sales. Do the test at the 5% and 10% levels. 
+
+    $$H0: \beta_1 = 0 \text{ against } H1: \beta_1 > 0 $$
+
+    $$t  = (\beta_{j} - \alpha_{j}) / se(\hat\beta_{j}) = (0.321 - 0) / 0.216 = 1.486$$
+
+        |  level  | critical value | t-test result     |
+        |---------|----------------|-------------------|
+        |  5%     |   1.696        |   fails to reject |
+        |  10%    |   1.309        |   rejects         |
+
+
+
+    iii) Interpret the coefficient on $profmarg$. Is it economically large?
+
+    ```
+    Not really, a 1 percentage point increase in profmarg leads to a .05 percentage point increase in rdintens.
+    ```
+
+    iv) Does $profmarg$ have a statistically significant effect on $rdintens$?
+
+    $$t = 1.087$$
+
+    For a one-sided test, we fail to reject the null at either a 5% or 10% level.
+
+4) **Question:** Are rent rates influenced by student population in a college town? Let $rent$ be the average monthly rent paid on rental units in a college town in the United States. 
+Let $pop$ denote the total city population. $avginc$ the average city income, and $pctstu$ the student population as a percentage of the total population. One model to test for a relationshipo is:
+
+    $$ \log(rent) = \beta_0 + \beta_1 \log(pop) + \beta_2 \log(avginc) + \beta_3 pctstu + u $$
+
+    i) State the null hypothesis that size of the student body relative to the population has no ceteris paribus effect on monthly rents. State the alternative that there is an effect. 
+
+        This is a two-sided test. 
+
+    $$H0: \beta_3 = 0 \text{ against } H1: \beta_3 \neq 0 $$
+
+    ii) What signs do you expect for $\beta_1$ and $\beta_2$?
+
+    I would expect both to have a positive sign
+
+    iii) The equation estimated using 1990 data from RENTAL for 64 college towns is:
+
+        What is wrong the the statement: "A 10% increase in population is associated with about a 6.6% increase in rent"? 
+
+    $$
+    \begin{aligned}
+    log(rent) &= 0.043 + 0.066 log(pop) + 0.507 log(avginc) + 0.0056 pctstu \\
+    &\quad (0.844) \quad (0.039) \quad\quad\quad\quad (0.081) \quad\quad\quad\quad (0.0017) \\
+    n &= 64, \quad R^2 = 0.458
+    \end{aligned}
+    $$
+
+        It is 0.66%, not 6.6% 
+
+
+    iv) Test the hypothesis stated in part (i) at the 1% level. 
+
+    $$t = (0.0056 - 0) / 0.0017 = 3.294$$
+
+        Given n = 64, the critical value for a two-sided test at the 1% level is 2.660
+
+        Therefore, we reject the null hypothesis at the 1% significance level.
+    
+5. **Question:** Consider the estimated equation from Example 4.3, which can be used to study the effects of skipping class on college GPA:
+
+    $$
+    \begin{aligned}
+    colGPA &= 1.39 + .412 hsGPA + 0.15 ACT - 0.083 skipped \\
+    &\quad (0.33) \quad (0.094) \quad\quad\quad (0.011) \quad\quad (0.026) \\
+    n &= 141, \quad R^2 = 0.234
+    \end{aligned}
+    $$
+
+
+    i) Using the standard normal approximation, find the 95% confidence interval for $\beta_{hsGPA}$.
+
+    $$0.412 \pm 1.96 * 0.094 = (0.228, 0.596)$$
+
+    ii) Can you reject the hypothesis $H0: \beta_{hsGPA} = 0.4$ against the two-sided alternative at the 5% level?
+    
+    $$t = (0.412 - 0.4) / 0.094 = 0.128$$
+
+        This fails to reject at the 5% significance level. 
+
+    iii) Can you reject the hypothesis $H0: \beta_{hsGPA} = 1$ against the two-sided alternative at the 5% level?
+
+    $$t = (0.412 0 1) / 0.094 = -6.191$$
+
+        This rejects at the 5% significance level.
+
+
+6. **Question:** In Section 4-5, we used as an example testing the rationality of assessments of housing prices. There, we used a log-log model in $price$ and $assess$  [see equation (4.47)]. 
+Here, we use a level-level formulation. 
+
+    i) In the simple regression model $price = \beta_0 + \beta_1 * assess + u$ the assessment is rational if $\beta_1 = 1$ and $\beta_0 = 0$. 
+    First, test the hypothesis that $H0: \beta_0 = 0$ against the two-sided alternative. Then, test $H0: \beta_1 = 1$ against the two-sided alternative. What do you conclude? 
+    The estimated equation is:
+
+    $$
+    \begin{aligned}
+    price &= -14.47 + 0.976 * assess \\
+    &\quad (16.27) \quad (0.049) \\
+    n &= 88, \quad SSR = 165,644.51, \quad R^2 = 0.820
+    \end{aligned}
+    $$
+    
+        For $H0: \beta_0 = 0$
+
+        $$t = (-14.47 - 0) / 16.27 = -0.889$$
+
+        |  Significance Level  | Critical Value (n=88) | t-statistic | Result           |
+        |----------------------|-----------------------|-------------|------------------|
+        |  1%                  |   2.633               |   -0.889    | fails to reject  |
+        |  5%                  |   1.987               |   -0.889    | fails to reject  |
+        |  10%                 |   1.663               |   -0.889    | fails to reject  |
+
+        For $H0: \beta_1 = 1$
+
+        $$t = (0.976 - 1) / 0.049 = -0.490$$
+
+        |  Significance Level  | Critical Value (n=88) | t-statistic | Result           |
+        |----------------------|-----------------------|-------------|------------------|
+        |  1%                  |   2.633               |   -0.490    | fails to reject  |
+        |  5%                  |   1.987               |   -0.490    | fails to reject  |
+        |  10%                 |   1.663               |   -0.490    | fails to reject  |
+
+    
+    ii) To test the join hypothesis that $beta_0 = 0$ and $beta_1 = 1$ we need the SSR in the restricted model. This amounts to computing $\sum_{i=1}^{n}(price_i - assess_i)^2$,
+    where n = 88, because the residuals in the restricted model are just $price_i - assess_i$. (No estimation is needed for the restricted model because both parameterse are specified under $H0$.)
+    This turns out to yield SSR = 209,448.99. Carry out the F test for the joint hypothesis. 
+     
+    
+    
+        $F = \frac{(SSR_{r} - SSR_{ur}) / q}{SSR_{ur} / (n - k_{ur} - 1)} = \frac{(209,448.99 - 165,644.51) / 2}{165,644.51 / (88 - 2 - 1)} = 11.37$
+    
+    ```
+    This confidently rejects the null at the 1% significance level.
+    ```
+
+    iii) Now, test $H0: \beta_2 = 0$, $\beta_3 = 0$, and $\beta_4 = 0$ in the model $price = \beta_0 + \beta_1 assess + \beta_2 lotsize + \beta_3 sqrft + \beta_4 bdrms + u$.
+    The R-squared from estimating this model using the same 88 houses is 0.829. 
+
+    
+    $$F = \frac{(R^{2}_{ur} - R^{2}_{r}) / q}{(1 - R^{2}_{ur}) / (n - k_{ur} - 1)} = \frac{(0.829 - 0.820) / 3}{(1 - 0.829) / (88 - 5 - 1)} = 1.44$$
+    
+    At n = 88, the critical value is 1.645, which this test fails to reject. So we fail to reject the null that lotsize, sqrft, and bdrms have no effect on price after controlling for assess.    
+
+
+    iv) If the variance of $price$ changes with $assess$, $lotsize$, $sqrft$, or $bdrms$, what can you say about the F test from part (iii)?
+
+    If the variance of $price$ changes with those variables, that means that error is heteroskedastic which means the regression fails to meet the Gauss-Markov assumptions, and therefore the 
+    F-test results are not be valid.
+
+
+7. **Question:** In Example 4.7, we used data on nonunionized manufacturing firms to estimate the relationship between the scrap rate and other firm characteristics. 
+We now look at this example more closely and use all available firms.
+
+    i) The population model estimated in Example 4.7 can be written as $log(scrap) = \beta_0 + \beta_1 hrsemp + \beta_2 log(sales) * \beta_r log(employ) + u$
+
+        Using the 43 observations availabe for 1987, the estimated equation is: 
+
+        $$
+        \begin{aligned}
+        log(scrap) &= 11.74 - 0.042 hrsemp - 0.951 log(sales) + 0.992 log(employ) \\
+        &\quad (4.57) \quad (0.019) \quad\quad\quad (0.370) \quad\quad\quad\quad (0.360) \\
+        n &= 43, \quad R^2 = 0.310
+        \end{aligned}
+        $$
+
+        Compare the equation to that estimated using only the 29 nonunionized firm in the sample. 
+
+        ```{r}
+        data(jtrain)
+        
+        jtrain_nonunion <- jtrain[jtrain$union == 0, ]
+
+        model_nonunion <- lm(lscrap ~ hrsemp + log(sales) + lemploy, data = jtrain_nonunion)
+
+        summary(model_nonunion)
+        ```
+
+
+
+    ii) Show that the population model can also be written as 
+
+        $$log(scrap) = \beta_0 + \beta_1 hrsemp + \beta_2 log(sales/employ) + \theta_3 log(employ) + u$$
+
+        where $\theta_3 = \beta_2 + \beta_3$. Interpret the hypothesis $H_0: \theta_3 = 0$. 
+
+        By properties of logarithms, we have that:
+        $$log(sales) = log(sales/employ) + log(employ)$$   
+        Therefore, substituting this into the original equation:
+        $$log(scrap) = \beta_0 + \beta_1 hrsemp + \beta_2 [log(sales/employ) + log(employ)] + \beta_3 log(employ) + u$$
+        $$= \beta_0 + \beta_1 hrsemp + \beta_2 log(sales/employ) + (\beta_2 + \beta_3) log(employ) + u$$
+        $$= \beta_0 + \beta_1 hrsemp + \beta_2 log(sales/employ) + \theta_3 log(employ) + u$$ 
+        The hypothesis $H_0: \theta_3 = 0$ tests whether the combined effect of sales and employment on scrap rate is zero, meaning that changes in firm size (as measured by employment) do not influence the scrap rate when controlling
+        for the sales-to-employee ratio.
+
+
+    iii) When the equation from part ii is estimated, we obtain. Controlling for worker training and for the sales-to-employee ration, do bigger firms have larger statistically significant scrap rates?
+
+    $$
+    \begin{aligned}
+    log(scrap) &= 11.74 - 0.042 hrsemp - 0.951 log(sales/employ) + 0.041 log(employ) \\
+    &\quad (4.57) \quad (0.019) \quad\quad\quad (0.370) \quad\quad\quad\quad\quad\quad (0.205) \\
+    n &= 43, \quad R^2 = 0.310
+    \end{aligned}
+    $$
+
+        $$t = (0.041 - 0 / 0.205) = 0.200$$
+
+        At n = 43, c = 1.302, which we fail to reject at the 10% sigificance level. It is therefore unproven that scrap rate increases with firm size.
+
+
+    iv) Test the hypothesis that a 1% increase in $sales/employ$ is associated with a 1% drop in the scrap rate. 
+        
+        $$H0: \beta_2 = -1 \text{ against } H1: \beta_2 \neq -1 $$
+
+        $$t = (-0.951 - (-1)) / 0.370 = 0.135$$
+
+        This fails to reject the null at the 10% significance level.
+
+
+8. **Question:** Consider the multiple regression model with three independent variables, under the classical linear model assumptions MLR.1 through MLR.6:
+
+    $$y = \beta_0 + \beta_1 x_1 + \beta_2 x_2 + \beta_3 x_3 + u$$
+
+    You would like to test the null hypothesis $H_0: \beta_1 - 3 \beta_2 = 1$. 
+
+    i) Let $\hat{\beta}_1$ and $\hat{\beta}_2$ denote the OLS estimators of $\beta_1$ and $\beta_2$. Find Var($\hat{\beta}_1 - 3 \hat{\beta}_2$) in terms of variances of
+    $\hat{\beta}_1$ and $\hat{\beta}_2$ and their covariance between them. What is the standard error of $\hat{\beta}_1 - 3 \hat{\beta}_2$?
+
+        $$Var(aX + bY) = a^2 Var(X) + b^2 Var(Y) + 2ab Cov(X, Y)$$
+
+        $$\therefore Var(\beta_1 - 3\beta_2) = Var(\beta_1) + 9 Var(\beta_2) - 6 Cov(\beta_1, \beta_2)$$
+
+        $$SE(\beta_1 - 3\beta_2) = \sqrt{Var(\beta_1 - 3\beta_2)}$$
+
+        $$\therefore SE(\beta_1 - 3\beta_2) = \sqrt{Var(\beta_1) + 9 Var(\beta_2) - 6 Cov(\beta_1, \beta_2)}$$
+
+    ii) Write the t-statistic for testing $H_0: \beta_1 - 3 \beta_2 = 1$. 
+
+        $$t = \frac{(\hat{\beta}_1 - 3 \hat{\beta}_2) - 1}{SE(\hat{\beta}_1 - 3 \hat{\beta}_2)}$$
+
+
+    iii) Define $\theta_1 = \beta_1 - 3 \beta_2$ and $\hat{\beta}_1 = \hat{\beta}_1 - 3 \hat{\beta}_2$. Write a regression equation involing $\beta_0$, $\theta_1$, $\beta_2$ and $\beta_3$ 
+    that allows you to directly obtain $\hat{\beta}_1$ and its standard error. 
+
+    $$y = \beta_0 + \theta_1 x_1 + \beta_2 x_2 + \beta_3 x_3 + u$$
+
+    $$ \therefore y = \beta_0 + (\theta_1 + 3 \beta_2) x_1 + \beta_2 x_2 + \beta_3 x_3 + u$$
+
+    $$ = \beta_0 + \theta_1 x_1 + 3 \beta_2 x_1 + \beta_2 x_2 + \beta_3 x_3 + u$$
+
+    $$ = \beta_0 + \theta_1 x_1 + \beta_2 (3 x_1 + x_2) + \beta_3 x_3 + u$$ 
+
+
+9. **Question:** In Problem 3 in Chatper 3, we estimated the equation
+
+    $$
+    \begin{aligned}
+    \hat{sleep} &= 3638.25 - .148 totwrk - 11.13 educ + 2.20 age \\
+    &\quad (112.28) \quad (0.017) \quad\quad (5.88) \quad\quad (1.45) \\
+    n &= 706, \quad R^2 = 0.113
+    \end{aligned}
+    $$
+
+    where we now report standard errors with the estimates.
+
+    i) Is either $educ$ or $age$ individually significant at the 5% level against a two-sided alternative? Show your work
+
+        <u>For educ:</u>
+
+        $$t = (-11.13 - 0) / 5.88 = -1.89, \quad |t| = 1.89 < 1.963$$
+
+            This fails to reject the null hypothesis 
+
+        <u>For age:</u>
+
+        $$t = (2.20 - 0) / 1.45 = 1.52 < 1.963$$
+
+            This also fails to reject the null hypothesis. 
+
+
+
+    ii) Dropping $educ$ and $age$ from the equation gives:
+
+        Are $educ$ and $age$ jointly significant in the original equation at the 5% level? Justify you answer. 
+
+        $$
+        \begin{aligned}
+        \hat{sleep} &= 3,586.38 - .151 totwrk \\
+        &\quad (38.91) \quad (0.017) \\
+        n &= 706, \quad R^2 = 0.103
+        \end{aligned}
+        $$
+
+        <u>Answer</u>:
+    
+        $$F = \frac{(R^{2}_{ur} - R^{2}_{r}) / q}{(1 - R^{2}_{ur}) / (n - k_{ur} - 1)} = \frac{(0.113 - 0.103) / 2}{(1 - 0.113) / (706 - 4 - 1)} = \frac{0.005}{0.001265} = 3.95$$
+
+        Given a critical value of 1.963 at the 5% level, we reject the null that $educ$ and $age$ are not jointly significant.
+
+    
+    iii) Does including $educ$ and $age$ in the model greatly affect the estimated tradeoff between sleeping and working?
+    
+            The coefficient only moves a small amount between the restricted and unrestricted models, so not greatly affected. 
+
+
+    iv) Suppose that the sleep equation contains heteroskedasticity. What does this mean about the tests computed in parts i) and ii)?
+
+            It means the hypothesis tests are invalid.
+
+
+
+10. **Question:** Regression analysis can be used to test whether the market efficiently uses information in valuing stocks. For concreteness, let $return$ be the total return from holding 
+a firm's stock over the four-year period from the end of 1990 to the end of 1994. The *efficient markets hypothesis* states that these returns should not be systematically related to information known in 1990.
+If firm characteristics known at the beginning of the period help to predict stock returns, then we could use this information in choosing stocks. 
+
+    For 1990, let $dkr$ be a firm's debt to capital ratio, let $eps$ denote the earnings per share, let $netinc$ denote net income, and let $salary$ denote total compensation for the CEO. 
+
+    i) Using the data in RETURN, the following equation was estimated:
+
+        $$
+        \begin{aligned}
+        \hat{return} &= -14.37 + 0.321 dkr + 0.43 eps - 0.0051 netinc + 0.0035 salary \\
+        &\quad (6.89) \quad (0.201) \quad\quad (0.078) \quad (0.0047) \quad\quad\quad (0.002) \\
+        n &= 142, \quad R^2 = 0.0395
+        \end{aligned}
+        $$
+
+        Test whether the explanatory variables are jointly significant at the 5% level. Is any explanatory variable individually significant? 
+
+        $$\frac{R_{2} / k}{(1-R_{2} / (n - k 0 1))} = \frac{0.0395 / 4}{(1-0.0395) / (142 -4 - 1)} = 1.41$$
+
+            Given critical value of 1.96, we fail to reject the null that the explanatory variables are not jointly significant.
+
+    ii) New, reestimate the model using the log form for netinc and salary:
+
+        $$
+        \begin{aligned}
+        \hat{return} &= -36.30 + 0.327 dkr + 0.069 eps - 4.74 log(netinc) + 7.24 log(salary) \\
+        &\quad (39.37) \quad (0.203) \quad\quad (0.080) \quad (3.39) \quad\quad\quad\quad (6.31) \\
+        n &= 142, \quad R^2 = 0.0330
+        \end{aligned}
+        $$
+
+        Do any of your conclusions from part (i) change?
+
+        $$\frac{R_{2} / k}{(1-R_{2} / (n - k 0 1))} = \frac{0.0330 / 4}{(1-0.0330) / (142 -4 -1)} = 1.17$$
+
+            This also fails to reject the null hypothesis that the explanatory variables are not jointly significant.
+
+    iii) In this sample, some firms have zero debt and others have negative earnings. Should we try to use $log(dkr)$ or $log(eps)$ in the model to see if these improve the fit? Explain. 
+
+            We shouldn't use either as taking the log of 0 or a negative number will return an undefined answer in most computer programs. 
+
+
+
+    iv) Overall, is the evidence for predictability of stock returns strong or weak?
+
+            Pretty weak; not strong practical significance or statistical significance. Also a low R-squared, meaning les than 4% of variance is explained by the model. 
+
+
+
+11. **Question:** The following table was created using the data in CEOSAL2, where standard errors are in parentheses below the coefficients: 
+
+    The variable $mktval$ is market value of the firm, $profmarg$ is profit as apercentage of sales, $ceoten$ is years as CEO with the current company, and $comten$ is totalyears 
+    with the company. 
+
+    i) Comment on the effect of profmarg on CEO salary. 
+
+            Has a fairly small (and inverse effect) at ~ -0.00223. It also fails to reject the null at the 10% level, so it is possible that it has no effect at all.
+
+    ii) Does market value have a significant effect? Explain. 
+
+            Yes, at a 1% level it rejects the null that mark value has no effect on CEO salary.
+
+    iii) Interpret the coefficient on $ceoten$ and $comten$. Are these explanatory variables statistically significant?
+
+            Yes both coefficients are statistically significant, but they have little practical value as their effects are small.
+
+    iv) What do you make of the fact that longer tenure with the company, holding the other factors fixed, is associated with a lower salary?
+
+            Slower growth, less aggressive, lower salary 
+
+
+12. **Question:** The following analysis was obtained using data in MEAP93, which contains school-level pass rates (as a percent) on a tenth-grade math test. 
+
+    i) The variable $expend$ is expenditures per student, in dollars, and $math10$ is the pass rate on the exam. The following simple regression relates $math10$ to $lexpend = log(expend)$:
+
+        $$
+        \begin{aligned}
+        math10 &= -69.4 + 11.16 lexpend \\
+        &\quad (25.53) \quad (3.17) \\
+        n &= 408, \quad R^2 = 0.0297
+        \end{aligned}
+        $$
+
+        Interpret the coefficient on $lexpend$. In particular, if $lexpend$ increases by 10%, what is the estimated percentage point change in $math10$? What do you make of the large negative 
+        intercept estimate? (The minimum value of $lexpend$ is 8.11 and its average value is 8.37.) 
+
+            If lexpend increases by 10%, then math10 increases by 1.116 percentage points. The minimum value of lexpend is about $3.00 per student, which translates to a pass rate of 21%. As such, 
+            the large negative intercept is not too concerning, because it does not hold a practical application. 
+
+    ii) Does the small R-squared in part (i) imply that spending is correlated with other factors affecting $math10$? Explain. Would you expect the R-squared to be much higher if expenditures were 
+    randomly assigned to schols - that is, independent of other school and student characteristics - rather than having the school districts determine spending? 
+
+        No this wouldn't mean that spending is correlated with other factors affecting math10. R-squared is unrelated to collinearity in the independent variables. This just means we have a feature that 
+        has significance at a practical and statistical level, but there are other important predictors that are very significant as well. I would not expect R-squared to be higher if spending were 
+        randomly assigned, because there are likely many other factors that influence math10 that would still be present.
+
+
+    iii) When log of enrollment and the percent of students eligible for the federal free lunch program are included, the estimated equation becomes. 
+    Comment on the happens to the coefficient on $lexpend$. Is the spending coefficient still statistically different from zero? 
+        
+    $$
+    \begin{aligned}
+    math10 &= -23.14 + 7.75 lexpend - 1.26 log(enroll) - 0.324 lunch \\
+    &\quad (24.99) \quad (3.04) \quad\quad\quad (0.58) \quad\quad\quad\quad (0.36) \\
+    n &= 408, \quad R^2 = 0.1893
+    \end{aligned}
+    $$
+
+        lexpend goes down, but the spending coefficient is still statistically different from zero, which rejects at least at the 5% level. 
+
+
+    iv) What do you make of the R-squared in part (iii)? What are some other factors that could be used to explain $math10$ (at the school level)?
+
+            R-squared went up, which means we're explaining more of variance in math10 (both new variables are statistically significant). Some other factors that could be used to explain 
+            math10 are: combined years of education of parents, books in library, proximity to higher level education, student-teacher ratio...etc.,
+
+
+    
+13. **Question:** The data in MEAPSINGLE were used to estimate the following equations relating school-level performance on a foruth-grade math test to socioeconomic characteristics of students attending school. 
+    The variable $free$, measured at the school level, is the percentage of students eligible for the federal free lunch program. The variable $medinc$ is median income in the ZIP code, and $pctsgle$ is percent 
+    of students not living with two parents (also measured at the ZIP code level). 
+
+
+    $$
+    \begin{aligned}
+    \hat{math4} &= 96.77 - 0.833 pctsgle \\
+    &\quad (1.60) \quad (0.071) \\
+    n &= 299, \quad R^2 = 0.380
+    \end{aligned}
+    $$
+
+    $$
+    \begin{aligned}
+    \hat{math4} &= 93.00 - 0.275 pctsgle - 0.402 free \\
+    &\quad (1.63) \quad (0.117) \quad\quad\quad (0.070) \\
+    n &= 299, \quad R^2 = 0.459
+    \end{aligned}
+    $$ 
+
+    $$
+    \begin{aligned}
+    \hat{math4} &= 24.49 - 0.274 pctsgle - 0.422 free - 0.752 lmedinc + 9.01 lexppp \\
+    &\quad (59.24) \quad (0.161) \quad\quad\quad (0.071) \quad\quad (5.358) \quad\quad\quad (4.04) \\
+    n &= 299, \quad R^2 = 0.472
+    \end{aligned}
+    $$
+
+    $$
+    \begin{aligned}
+    \hat{math4} &= 17.52 - 0.259 pctsgle - 0.420 free + 8.80 lexppp \\
+    &\quad (32.25) \quad (0.117) \quad\quad\quad (0.070) \quad\quad (3.76) \\
+    n &= 299, \quad R^2 = 0.472
+    \end{aligned}
+    $$
+
+        i) Interpret the coefficient on the variable $pctsgle$ in the first equation. Comment on what happens when $free$ is added as an explanatory variable.
+
+            Has extremely high statistical significance and an inverse relationship with math4 (fairly practically significant as well). When free is added, statistical significance dramatically decreases, though it still is significant.  
+
+        ii) Does expenditure per pupil, entered in logarithmic form, have a statistically significant effect on performance? How big is the estimated effect? 
+
+            Yes, it has a stat sig effect on performance. High practical significance and stat sig down to the 5% or so level. A 10% increase in lexppp results in a 1% increas in math4. 
+
+        
+        iii) If you had to choose among the four equations as your best estimate of the effect of $pctsgle$ and obtain a 95% confidence interval of $\beta_{pctsgle}$, which equation would you choose and why?
+
+            I would choose the last equation, as it has the highest R-squared and includes the most relevant variables. 
+
+            $$-0.259 \pm 1.96 * 0.117 = (-0.489, -0.029)$$
+
+

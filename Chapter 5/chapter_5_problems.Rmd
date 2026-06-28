@@ -1,0 +1,14 @@
+1. 
+
+2. Inconsistency is positive as funds and risktol are postiively correlated. 
+
+3. No. I would assume average number of cigarettes smoked in the US adult population is fairly low
+but those that smoke smoke a lot, so it would skew heavily right. 
+
+4. 
+
+5. If you used a normal distribution it would not be 0. It would contradict the assumpmtion for score, because score cannot be greater than 100. 
+
+ii) Normal distribution fits very well for the left-tail. In the left tail, there are proportionally fewer students with very low scores. 
+
+6. 

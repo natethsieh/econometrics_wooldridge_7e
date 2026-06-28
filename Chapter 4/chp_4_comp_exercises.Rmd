@@ -1,0 +1,520 @@
+---
+title: "Chapter 4 Computer Exercises"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(wooldridge)
+library(car)
+```
+
+C1. **Question:** The following model can be used to study whether campaign expenditures affect election outcomes where $voteA$ is the percentage of the vote received by Candidate A, 
+    $expendA$ and $expendB$ are campaign expenditures by Candidates A and B, and $prtystrA$ is a measure of party strength for Candidate A (the percentage of the most recent presidential 
+    vote that went to A's party). 
+  
+$$voteA = \beta_0 + \beta_1 log(expendA) + \beta_2 log(expendB) + \beta_3 prtystrA + u$$
+
+i) What is the interpretation of $\beta_1$?
+
+$\beta_1$ is probably positive and practically significant.  
+
+
+ii) In terms of the parameters, state the nnull hypothesis that a 1% increase in A's expendtiures is offset by a 1% increase in B's expendittures. 
+
+$$H_0: \beta_1 + \beta_2 = 0$$
+
+
+iii) Estimate the given model using the data in VOTE1 and report the results in ususal form. Do A's expenditures affect the outcome? What about B's expenditures? Can you use these results to test the hypothesis in part (ii)?
+
+```{r}
+data("vote1")
+model <- lm(voteA ~ log(expendA) + log(expendB) + prtystrA, data = vote1)
+summary(model)
+```
+
+Yes, A's expendture's and B's expenditures both have statistically significant effects on voteA. We can't use these results directly, but it is possible to test the hypothesis stated in 
+part ii). 
+
+iv) Estimate a model that directly gives the t statistic for testing the hypothesis in part (uii). What do you conclude? (Use a two-sided alternative.)
+    ```{r}
+    linearHypothesis(model, "log(expendA) + log(expendB) = 0")
+    ```
+
+    We fail to reject the null hypothesis at the 5% level. There is not enough evidence to suggest that a 1% increase in A's expenditures is offset by a 1% increase in B's expenditures.
+
+
+
+C2. **Question:** Use the data in LAWSCH85 for this exercise. 
+
+i) Using the same model as in Problem 4 in Chapter 3, state and test the null hypothesis that the rank of law schools has no ceteris paribus effect on median starting salary. 
+
+$$log(salary) = \beta_0 + \beta_1 LSAT + \beta_2 GPA + \beta_3 log(libvol) + \beta_4 log(cost) + \beta_5 rank + u$$
+
+```{r}
+data(lawsch85)
+c2model <- lm(log(salary) ~ LSAT + GPA + log(libvol) + log(cost) + rank, data = lawsch85)
+
+summary(c2model)
+
+
+```
+t stat is 10 which is very stat sig. We reject the null hypothesis that rank has no effect on median starting salary.
+
+ii) Are features of the incoming class of students - namely, LSAT and GPA - individually or jointly significant for explaining salary? (be sure to account for missing data on LSAT and GPA)
+
+```{r}
+non_nulls_lawsch85 <- lawsch85[!is.na(lawsch85$LSAT) & !is.na(lawsch85$GPA), ]
+non_nulls_lawsch85_model_ind <- lm(log(salary) ~ LSAT + GPA + log(libvol) + log(cost) + rank, data = non_nulls_lawsch85)
+summary(non_nulls_lawsch85_model_ind)
+```
+
+Individually: GPA had a stat sig effect on salary, while LSAT did not. 
+
+```{r}
+non_nulls_lawsch85 <- lawsch85[!is.na(lawsch85$LSAT) & !is.na(lawsch85$GPA), ]
+non_nulls_lawsch85_model_joint <- lm(log(salary) ~ log(libvol) + log(cost) + rank, data = non_nulls_lawsch85)
+summary(non_nulls_lawsch85_model_joint)
+```
+$$\frac{(.1198 - .1124) / 2}{(0.1124) / (130)} = 4.28$$
+
+Therefore we reject the null that LSAT and GPA do not jointly explain salary.
+
+iii) Test whether the size of the entering class ($clize$) or the size of the faculty ($faculty$) needs to be added to this equation; carry out a single t-test. (Be careful to account for missing data on $clsize$ and $faculty$.)
+
+```{r}
+non_nulls_lawsch85_cf <- lawsch85[!is.na(lawsch85$clsize) & !is.na(lawsch85$faculty), ]
+non_nulls_lawsch85_model_cf <- lm(log(salary) ~ LSAT + GPA + log(libvol) + log(cost) + rank + clsize + faculty, data = non_nulls_lawsch85_cf)
+summary(non_nulls_lawsch85_model_cf)
+
+
+```
+
+$$\frac{(.1131 - .1124) / 2}{(0.1131) / (125)} = 0.403$$
+
+Therefore we fail to reject the null that clsize and faculty do not need to be added to the equation.
+
+
+iv) What factors might influence the rank of the law school that are not included in the salary regression? 
+
+Other factors could include: geographic location and network of alumni are two big ones that come to mind.
+
+C3) **Question:** Refer to Computer Exercise C2 in Chapter 3. Now, use the log of the housing price as the dependent variable:
+
+$$log(price) = \beta_0 + \beta_1 sqrft + \beta_2 bdrms + u$$
+
+i) You are interested in estimating and obtaining a confidence interval for the percentage change in $price$ when a 150-square foot bedroom is added to a house. 
+In decimal form, this is $\theta_1 = 150\beta_1 + \beta_2$. Use the data in HPRICE1 to estimate $\theta_1$. 
+
+```{r}
+data("hprice1")
+c3model <- lm(log(price) ~ sqrft + bdrms, data = hprice1)
+summary(c3model)
+theta1_hat <- 150 * coef(c3model)["sqrft"] + coef(c3model)["bdrms"]
+theta1_hat
+
+```
+
+ii) Write $\beta_2$ in terms of $\theta_1$ and $\beta_1$ and plug this into the log(price) equation. 
+$$log(price) = \beta_0 + \beta_1 sqrft + (\theta_1 - 150\beta_1) bdrms + u$$
+
+iii) Use part (ii) to obtain a standard error for $\hat{\theta_1}$ and use this standard error to construct a 95% confidence interval. 
+
+```{r}
+data("hprice1")
+
+c3iiimodel <- lm(log(price) ~ I(sqrft - 150 * bdrms) + bdrms, data = hprice1)
+summary(c3iiimodel)
+``` 
+
+This is wrong but can't be bothered; i get it. Need to shuffle around until we get theta expressed as a single coefficient, and then take regression, find standard error. 
+We know theta_1hat from part i), and use standard error and critical values to construct the confidence interval.
+
+
+
+C4. **Question:** Compare R-squared values for one regression against a restricted model
+
+```{r}
+data("bwght")
+restricted_model <- lm(bwght ~ cigs + parity + faminc, data=bwght)
+# summary(restricted_model)
+
+full_model <- lm(bwght ~ cigs + parity + faminc + motheduc + fatheduc, data=bwght)
+# summary(full_model)
+cat("Restricted Model R-squared:", summary(restricted_model)$r.squared, "\n")
+cat("Full Model R-squared:", summary(full_model)$r.squared, "\n")
+```
+** Was an implication here around limiting null values 
+C5. **Question:** Use the data in MLB1 for exercise 
+
+i) Use equation 4.31 and compare when you restrict $rbisyr$
+
+```{r}
+data(mlb1)
+
+ur_mlb1 <- lm(log(salary) ~ years + gamesyr + bavg + hrunsyr + rbisyr, data=mlb1) 
+
+r_mlb1 <- lm(log(salary) ~ years + gamesyr + bavg + hrunsyr, data=mlb1)
+
+summary(ur_mlb1)
+summary(r_mlb1)
+
+```
+
+$hrunsyr$ stat sig drops off when restricting on $rbisyr$. Estimate goes up. 
+
+ii) Add runsyr, fldperc and sbaseyr to model. Which are stat sig?
+
+```{r}
+new_mlb1 <- lm(log(salary) ~ years + gamesyr + bavg + hrunsyr + rbisyr + runsyr + fldperc + sbasesyr, data=mlb1) 
+
+summary(new_mlb1)
+```
+
+Neither fldperc or sbasesyr are stat sig.
+
+iii) Test joint stat signess of fldperc and sbasesyr and bavg
+
+```{r}
+result <- linearHypothesis(new_mlb1, c("bavg = 0", "fldperc = 0", "sbasesyr = 0"))
+print(result)
+cat("\nF-statistic:", result$F[2], "\n")
+```
+We cannot reject the null that these three variables are 0, so they are not stat sig, jointly.
+
+
+C6. **Question:** Wage2 data for the exercise. 
+
+i) Standadrd wage equation; state the null that workforce has same effect as tenure. 
+
+$$log(wage) = \beta_0 + \beta_1 educ + \beta_2 exper + \beta_3 tenure + u$$
+
+$$H_0: \beta_2 = \beta_3$$
+
+ii) Test the null against the two sided alt at the 5% sig level, by constructing a 95% confidence interval. What do you conclude
+
+```{r}
+data(wage2)
+wage_model <- lm(log(wage) ~ educ + exper + tenure, data = wage2)
+summary(wage_model)
+
+(0.015328 - 0.13375) / ( var(wage2$exper, na.rm = TRUE) + var(wage2$tenure, na.rm = TRUE) - 2 *cov(wage2$exper, wage2$tenure))
+``` 
+
+This fails to reject the null that these two variables have the same effect. 
+
+
+C7. **Question:** Example in Section 4.4, dataset TWOYEAR
+
+i) Describe phsrank
+```{r}
+data("twoyear")
+min(twoyear$phsrank)
+max(twoyear$phsrank)
+mean(twoyear$phsrank)
+```
+
+ii) evalate phsrank in regression
+
+```{r}
+model_twoyear <- lm(lwage ~ jc + univ + exper + phsrank, data = twoyear)
+summary(model_twoyear)
+
+
+```
+phsrank is not stat sig, t-value of 1.269. 
+
+Results in a 0.3% increase in lwage for a 10% increase in phsrank
+
+iii) Does it change other variables? two and 4 year?
+
+```{r}
+model_two_year_r <- lm(lwage ~ jc + univ + exper, data = twoyear)
+summary(model_two_year_r)
+```
+It hardly effects the conclusions. Estimates barely change.
+
+
+iv) id is just the ID number which has no practical significance to the regression. 
+
+```{r}
+model_id <- lm(lwage ~ jc + univ + exper + id, data = twoyear)
+summary(model_id)
+```
+two sided p-value is 0.587 
+
+
+C8. **Question:** Use 401KSUBS and limmit it to single person households
+i) Single households in dataset?
+
+```{r}
+data("k401KSUBS")
+single_familys <- k401ksubs[k401ksubs$fsize == 1,]
+nrow(single_familys)
+
+```
+
+ii) Estimate the model
+```{r}
+single_model <- lm(nettfa ~ inc + age, data=single_familys)
+summary(single_model)
+```
+
+Both income and age have a positive relationship on nettfa, which is net total financial assets. It's a level level equation so $\delta x$ = $\delta y$ for both estimates. 
+
+iii) No because no one will, who is a 401k contributor will be of age 0 and have no income. They must necessarily be gainfully employed. 
+ 
+
+iv) Test if $\beta_2 = 1$ against $H_1: \beta_2 < 1$
+
+```{r}
+(0.84266 - 1) / 0.09022 = -1.743
+```
+
+At n = 2017 and 1% sig level for a one-sided test, critical value is 2.326, so this fails to reject
+
+v) Regress just inc and does coeff change? 
+
+```{r}
+single_fam_restrict <- lm(nettfa ~ inc, data=single_familys)
+summary(single_fam_restrict)
+```
+Yes inc estimate increases, as expected, as more error goes into the estimated term. 
+
+
+
+C9. **Question:** DISCRIM
+
+i) Estimate model. 
+```{r}
+data("discrim")
+sodamodel <- lm(log(psoda) ~ prpblck + log(income) + prppov, data=discrim)
+summary(sodamodel)
+```
+
+Yes it's stat sig with a t value of 2.729 at the 5% and 1% level for the two sided test. 
+
+ii) What's correlation between log(income) and prpov?
+
+```{r}
+cor(log(discrim$lincome), discrim$prppov, use = 'complete.obs')
+```
+
+They are fairly negatively correlated. 
+
+income is pretty stat sig at 1.9e-05 and prpov is not that stat sig but has some with a pv value of 0.16642
+
+iii)  Add log(hseval)
+
+```{r}
+sodamodel_seval <- lm(log(psoda) ~ prpblck + log(income) + prppov + log(hseval), data=discrim)
+summary(sodamodel_seval)
+``` 
+
+Coefficient is nearly 0 and positive. This is log log so 1% -> 0.01*1% increase in psoda.
+
+p-value is 3.61e-13 which is very small meaning it is very stat sig. Interesting!
+
+iv) prpblack estimate goes up, logincome goes down. 
+
+```{r}
+soda_model_restrict <-lm(log(psoda) ~ prpblck + log(hseval), data=discrim)
+
+summary(soda_model_restrict)
+
+((0.1839 - 0.1694) / 2) / ((1-0.1839) / (410 - 4 -1))
+
+This is stat sig at 5% and 1% level
+```
+
+
+v) I'd report the model with hseval as it is stat sig and improves the model fit.
+
+
+C10. **Question:** ELIM94_95. 
+
+i) Regress lavgsal on bs. 
+
+```{r}
+data("elem94_95")
+
+simple_elim_model <- lm(lavgsal ~ bs, data=elem94_95)
+summary(simple_elim_model)
+```
+
+Est slope is stat sig diff from 0 at 1% level. 
+
+```{r}
+(-0.79512 - -1) / (0.14965)
+```
+
+This is not stat sig diff from -1, though
+
+
+ii) Add lenrol and lstaff
+
+```{r}
+added_elin_model <- lm(lavgsal ~ bs + lenrol + lstaff, data=elem94_95)
+summary(added_elin_model)
+nrow(elem94_95)
+```
+
+Estimate on bs drops, as expected. 
+
+Estimates are prety different from table 4.1 
+
+iii) Why is the standard error getting smaller
+Multicollinearity increases but adding more variables decreases, more here. 
+
+iv) lstaff is log of staff / 1000 students. so hhigher lstaff -> smaller class size -> higher lavgsal.
+
+v) Add lunch
+
+```{r}
+added_and_elin_model <- lm(lavgsal ~ bs + lenrol + lstaff + lunch, data=elem94_95)
+
+summary(added_and_elin_model)
+```
+
+No they aren't paid for teaching disadvantaged. Coeff neg and stat sig. 
+
+
+vi) Is pattern consistent with Table 4.1 
+
+sure
+
+C11. **Question:** Data in HTV. 
+
+i) Estimate model by OLS and test null that educ is linearly related to abil against relationship that it is quadratic. 
+
+```{r}
+data(htv)
+htv_model <- lm(educ ~ motheduc + fatheduc + abil + I(abil^2), data = htv)
+summary(htv_model)
+```
+
+
+Pretty stat sig that it is quadratic. 
+
+ii) Test beta1 = beta2 
+
+```{r}
+(0.190126 - 0.108939) / (0.02806)
+```
+Stat sig b1 = b2 
+
+iv) corr between tui16 and tui18
+
+```{r}
+cor(htv$tuit17, htv$tuit18, use = 'complete.obs')
+```
+
+Pretty high correlation. Avg bc tuit17 and tuit18 are just tuition 1 year apart, which should basically be the same. taking average smoothes out
+
+Low pvval and not super stat sig 
+
+v) Does avgtuit make sense?
+
+Sure. ... 
+
+
+C12. **Question:** ECONMATH
+i) Estimate the equation
+```{r}
+data(econmath)
+econmath_model <- lm(colgpa ~ hsgpa + actmth + acteng, data = econmath)
+summary(econmath_model)
+```
+Yeah they're all stat sig to 5% level.
+
+ii) Increase hsgpa 1 SD. 
+
+Changes 0.659001 * 0.343 = 0.226
+
+```{r}
+0.659001 * sd(econmath$hsgpa, na.rm = TRUE)
+
+0.2263196 / 0.013020 / sd(econmath$hsgpa, na.rm = TRUE)
+``` 
+
+iii) Test that actmath and act have same effect 
+
+```{r} 
+(0.013020 - 0.12219)
+vcov_matrix <- vcov(econmath_model)
+se_diff <- sqrt(vcov_matrix["actmth", "actmth"] + vcov_matrix["acteng", "acteng"] - 
+                2 * vcov_matrix["actmth", "acteng"])
+t_stat <- (0.013020 - 0.012219) / se_diff
+cat("Standard error of difference:", se_diff, "\n")
+cat("t-statistic:", t_stat, "\n")
+
+```
+Rejects at the 10% level but not at 5% level.
+
+
+iv) Model does not explain sufficient variation on colgpa due to R-squared = 0.25
+
+C13. **Question:** GPA1. 
+
+i) regress colGPA on PC, hsGPA, and ACT and get 95% confidence itnerval ofo BPC
+
+```{r}
+data(gpa1)
+gpa1_model <- lm(colGPA ~ PC + hsGPA + ACT, data= gpa1)
+summary(gpa1_model)
+confint(gpa1_model, "PC", level = 0.95)
+```
+
+Yes it's stat sig at 5% level.
+
+ii) Stat signess of BhsPGPA and BACT? Which is more important 
+
+hsGPA is very stat sig, ACT is not statsig at all. hsGPA also has significant practical significance whereas ACT does not.
+
+hsGPA much more important.
+
+iii) Add fathcol and mothcoll 
+```{r}
+gpa1_model_fc_mc <- lm(colGPA ~ PC + hsGPA + ACT + fathcoll + mothcoll, data= gpa1)
+summary(gpa1_model_fc_mc)
+``` 
+Neither are stat sig or practical significane  
+
+```{r}
+linearHypothesis(gpa1_model_fc_mc, c("fathcoll = 0", "mothcoll = 0"))
+```
+
+
+C14. JTRAIN98 
+
+i) Add enem97 
+
+```{r}
+data(jtrain98)
+jtrain_model <- lm(earn98 ~ train + earn96 + educ + age + married + unem96, data = jtrain98)
+summary(jtrain_model)
+```
+
+Yeah i would expect that if you're unemployed for a full year in 96 that will have a negative significant effect on earnings in 98. Also very stat sig. 
+
+ii) Compare versus less unem96
+
+```{r}
+jtrain_model_less_unem96 <- lm(earn98 ~ train + earn96 + educ + age + married, data = jtrain98)
+summary(jtrain_model_less_unem96)
+```
+
+The effect of training goes down a bit but is still stat sig. Still pratcically and stat sig
+
+iii) Find corr between earn96 and unem96 
+
+```{r}
+cor(jtrain98$earn96, jtrain98$unem96, use = 'complete.obs')
+``` 
+
+Yeah that checks out, i'd expect the two to be negatively correlated. given that one i earnings in the same year that the other reports unemployment 
+
+
+iv) Should you drop unem96? 
+
+No because it's stat sig and improves R-squared. 
+

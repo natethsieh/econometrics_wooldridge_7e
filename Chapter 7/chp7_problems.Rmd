@@ -1,0 +1,129 @@
+1. SLEEP75
+
+i) There is evidence but not statistically significant.
+
+ii) There is a very strong statistically significant trade-off between working and sleeping. The trade off is that for every extra 100 minutes spent working, people sleep 16.3 minutes less
+
+iii) F-test that drops agent h squared terms. 
+
+2. BWGHT
+
+i) Increase of 10 cigarettes per day results in a decrease in .44% of birth weight. 
+
+ii) A baby is expected to weigh 4.5% more than a non-white baby. The effect is statistically significant. 
+
+iii) The effect of mothers' education is expected to have a decrease in birth weight by 0.3%, but the statistical significance is pretty much nonexistent. 
+
+iv) You should be able to compute the F statistic by comparing the restricted versus the unrestricted models. 
+
+3. GPA2
+
+i) This is statistically significant. Size around 830 for the graduating class. 
+
+ii) -45 SAT points. The effect is statistically significant.
+
+iii) The difference is about negative 170 SAT points. It's very stat sig. 
+
+iv) This is about negative 100 SAT score points. The difference is very statistically significant. 
+
+
+4. CEO salary
+
+i) Holding sales and return on equity fixed, the estimated difference between utility and transport industry CEO is negative 28.3%. It is statistically significant given the standard error .099 in a t-test with a p-value that is stat sig at the 1% level. 
+
+ii) Not sure the question was updated for version of textbooks. 
+
+iii) Consumer products CEOs earn about 3% more than finance CEOs. 
+
+5. noPC
+
+i) New intercept is 1.26 plus .157. 
+
+New estimate is negative .157. 
+
+ii)  Nothing should happen to the R squared. 
+
+iii) They shouldn't both be included because there would be complete multi-colinearity.
+
+6. There should probably be a negative bias on the beta1 estimator given that the variable of being selectedFor the training program correlates inversely with an unobserved term, which is the capability of that worker. 
+
+7. 7.29 example
+
+i) The intercept should have one subtracted from it and then everything should have its sign flipped. 
+
+ii) Standard errors remain exactly the same. 
+
+iii) R squared also remains the same. 
+
+8. How many separate occasions last month did you smoke marijuana? ?
+
+i) Wages, education, experience and gender
+
+$$wage = \beta_0 + \beta_1 * marijuana + \beta_2*educ + \beta_3*exper + u$$
+
+Where the variable marijuana is number of times smoked per month.
+
+ii) Control for gender
+
+$$wage = \beta_0 + \beta_1 * marijuana + \beta_2*educ + \beta_3*exper + \beta_4*female + u$$
+
+You would test by running a standard hypothesis test on the gender variable. \
+
+iii) Make marijuana a discrete variable with options 0 through 3. 
+
+$$wage = \beta_0 + \beta_1 * discremarijuana + \beta_2*educ + \beta_3*exper + \beta_4*female + u$$
+
+iv) You would do a t-test or hypothesis test the same way and test if the variable discremarijuana = 0 had a stat sig effect on wage. 
+
+v) One potential problem with drawing causal inferences from this survey data is that it is not a randomized control trial. 
+
+Another is that the sample size might not be large enough to draw these inferences.
+
+9. General equation for a regression where there's a dummy variable, a quantitative variable, and an interaction between the dummy and the quantitative variable. 
+
+i) $y = \beta_0 + \delta_0 + \beta_1 * z + \delta_1 * z$
+
+ii) Proof. Plug and Chug. 
+
+iii) .357 / 0.030 = 11.9
+
+iv) No, because college is only four years. 
+
+10. voucher -> score
+
+i) Yes 
+
+ii) It isn't required to make it unbiased, but will help reduce the variance in standard error and increase the goodness of fit. 
+
+iii) Including these will help reduce the variance and standard error and increase the goodness of . 
+
+11. ECONMATH 
+
+i) The implication is that men on average score 3.83 percentage points higher. 
+3.73 - 1.96 * 0.74 = 2.35
+3.73 + 1.96 * 0.74 = 5.11
+[2.35, 5.11]
+
+ii) Why is estimate of male so imprecise? 
+
+((.349 - .329) / 1) / ((1-0.349) / (856 - 2 - 1)) = 0.74
+
+This means fail to reject the null. 
+
+iii) Not totally sure 
+
+12. race / ethnicity 
+
+i) The reason the coefficients in this equation are so different is because it re-centers the equation around the mean of the sample. 
+This is useful to do because it doesn't really make sense to look at the equation through the lens of controlling for when the populations are zero, because it is such a rare occurrence in the U.S. 
+You can interpret these coefficients as being in relation to the average populations of Hispanics and Blacks as a percent of total across each city, and that relationship to their expected salary. 
+
+ii) My interpretation is that close to the average representation of black and Hispanic people in U.S. cities, there is little racial discrimination that shows in their salaries. 
+
+iii) The intercept has also changed. This is because the intercept now represents wage when the percent of black and Hispanics as a % total of the population is the average. 
+
+13. 
+
+
+
+ 

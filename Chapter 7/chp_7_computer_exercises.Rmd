@@ -1,0 +1,804 @@
+---
+title: "Chapter 7 Computer Exercises"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(wooldridge)
+library(car)
+```
+
+1. GPA1
+
+i) add cols 
+```{r}
+data("gpa1") 
+
+model_gpa <- lm(colGPA ~ PC + hsGPA + ACT + mothcoll + fathcoll, data = gpa1)
+
+summary(model_gpa)
+```
+
+Yes it's still stat sig. Very. 
+
+ii) Test for joint significance of mothcoll and fathcoll
+
+```{r}
+# Unrestricted model
+model_unrestricted <- lm(colGPA ~ PC + hsGPA + ACT + mothcoll + fathcoll, data = gpa1)
+
+# Restricted model (without mothcoll and fathcoll)
+model_restricted <- lm(colGPA ~ PC + hsGPA + ACT, data = gpa1)
+
+# F-test for joint significance
+linearHypothesis(model_unrestricted, c("mothcoll", "fathcoll"))
+``` 
+
+iii) Add hsGPA^2. Is it needed? 
+
+```{r}
+model_gpa_squared <- lm(colGPA ~ PC + hsGPA + I(hsGPA^2) + ACT + mothcoll + fathcoll, data = gpa1)  
+summary(model_gpa_squared)
+```
+The adjusted R-squared didn't go down, bu the variable iself is ot very stat sig at all. 
+
+Drop it. 
+
+2. WAGE2 
+
+i) Estimate model 
+
+```{r}
+data("wage2")
+model_wage <- lm(lwage ~ educ + exper + tenure + married + black + south + urban, data = wage2)
+summary(model_wage) 
+```
+
+-20% and very stat sig. 
+
+ii) Add exper ^2 and tenure ^2 and show jointly insig at 20% level 
+
+```{r}
+model_wage_squared <- lm(lwage ~ educ + exper + I(exper^2) + tenure + I(tenure^2) + married + black + south + urban, data = wage2)
+summary(model_wage_squared) 
+linearHypothesis(model_wage_squared, c("I(exper^2)", "I(tenure^2)"))
+```
+
+Pr(>F) = 0.226 which shows that the two variables are jointly insignificant at the 20% level.
+
+iii) Extend to allow return to educ to depend on race and test whether return to educ does depend on race. 
+
+```{r}
+model_wage_interaction <- lm(lwage ~ educ + exper + tenure + married + black + south + urban + educ:black, data = wage2)
+summary(model_wage_interaction) 
+```
+
+Not stat sig. Return to education does not depend on race. 
+
+iv) Create interactions for married + black, married + nonblack, single and black, and single and nonblack. What's wage diff between married blacks and married nonblacks?
+
+```{r}
+model_marital_race_interaction <- lm(lwage ~ educ + exper + tenure + married + black + south + urban + married:black, data = wage2)
+summary(model_marital_race_interaction)
+```
+
+-.240820 + 0.061354 = 17.9% or so 
+
+C3. Model for MLS
+
+$$log(salary) = \beta_0 + \beta_1 * years + \beta_2 * gamesyr + \beta_3 * bavg + \beta_4 * hrunsyr + \beta_5 * rbisyr + \beta_6 * runsyr + \beta_7 * fldperc + \beta_8 * allstar + \beta_9 * frstbase + \beta_{10} * scndbase  + \beta_{11} * thrdbase + \beta_{12} * shrtstop + \beta_{13} * catcher + \epsilon$$
+
+i) State the null that catchers and outfilders earn, on average the same. Test using MLB1 
+
+H0: \(\beta_{13} = 0\)
+
+
+```{r}
+data("mlb1")
+model_mlb <- lm(log(salary) ~ years + gamesyr + bavg + hrunsyr + rbisyr + runsyr + fldperc + allstar + frstbase + scndbase + thrdbase + shrtstop + catcher, data = mlb1)
+summary(model_mlb)
+linearHypothesis(model_mlb, "catcher = 0")
+```
+
+Seems catchers make 25% more than outfield players. 
+
+ii) State null no diff in avg salary across positions once other factors have been controlled for. 
+H0: \(\beta_9 = \beta_{10} = \beta_{11} = \beta_{12} = 0\)
+
+```{r}
+linearHypothesis(model_mlb, c("frstbase = 0", "scndbase = 0", "thrdbase = 0", "shrtstop = 0", "catcher = 0"))
+```
+
+iii) Rejects the null at the 20% level, which isn't that significant. When remove catcher, fails to reject the null at all which means the outfielders largely make the same amount of money, but catchers make significantly different. This 
+is consistent with the findings of i and ii. 
+
+C4. GPA2
+
+$$colGPA = \beta_0 + \beta_1 * hsize + \beta_2 * hsize^2 + \beta_3 * hsperc + \beta_4 * sat + \beta_5 * female + \beta_6 * athlete + u$$
+
+i) What do you expect from coeff.. what are you unsure about 
+
+- hsize: negative coefficient 
+- hsize^2: positive coefficient
+- hsperc: positive coefficient
+- sat: positive coefficient
+- female: unsure
+- athlete: unsure   
+
+ii) Estimate the model 
+```{r}
+data("gpa2")
+
+model_gpa2 <- lm(colgpa ~ hsize + I(hsize^2) + hsperc + sat + female + athlete, data = gpa2)
+summary(model_gpa2)
+```
+It is stat sig, and is 0.1693. 
+
+iii) Drop SAT from the model 
+```{r}
+model_gpa2_no_sat <- lm(colgpa ~ hsize + I(hsize^2) + hsperc + female + athlete, data = gpa2)
+summary(model_gpa2_no_sat)
+```
+Athlete becomes not stat sig and much smaller at 0.0055
+
+This is because athletes that also academically high performers will have higher SAT scores. If we drop this, that means we are putting the effect somewhere else (likely in the error term). 
+This reduces the precision of the estimate for athlete, and also reduces the size of the coefficient.
+
+iv) Allow effect of athlete to dffer by gender and test the null that there is no ceteris paribus diff between women athletes and women non-athletes
+```{r}
+model_split_female <- lm(colgpa ~ hsize + I(hsize^2) + hsperc + sat + female + athlete + female * athlete, data = gpa2)
+summary(model_split_female)
+linearHypothesis(model_split_female, "athlete + female:athlete = 0")
+```
+
+Reject the null that there is no difference
+
+v) Does sat effect on colgpa differ by gender? 
+
+```{r}
+model_split_sat <- lm(colgpa ~ hsize + I(hsize^2) + hsperc + sat + female + athlete + female * sat, data = gpa2)
+summary(model_split_sat)
+linearHypothesis(model_split_sat, "sat + sat:female = 0")
+```
+
+Rejects the null that there is no difference. The effect of SAT on colGPA is different for men and women . 
+
+C5. rosneg 
+```{r}
+data("ceosal1")
+ceosal1$rosneg <- ifelse(ceosal1$ros < 0, 1, 0)
+
+# head(ceosal1)
+model_rosneg <- lm(lsalary ~ lsales + roe + rosneg, data = ceosal1)
+summary(model_rosneg)
+```
+If return on equity is negative then there is a negative effect on salary, but it isn't strongly stat sig. Just a 5% level.
+
+
+C6. SLEEP75 
+i) Estimate equation 
+```{r}
+data("sleep75")
+head(sleep75)
+model_sleep <- lm(sleep ~ totwrk + educ + age + I(age^2) + yngkid, data = sleep75)
+model_sleep_split_male <- lm(sleep ~ totwrk + educ + age + I(age^2) + yngkid + male, data = sleep75)
+summary(model_sleep)
+summary(model_sleep_split_male)
+```
+
+Not many differences between the two models, less the yngkid varaible, whose sign flis, but is not stat sig in either model. 
+
+ii) Compute chow test for sleep for men and women. Add male as interaction term to all variables. Is male stat sig / relevant on all the variables?
+```{r}
+model_sleep_interaction <- lm(sleep ~ totwrk + educ + age + I(age^2) + yngkid + male + totwrk:male + educ:male + age:male + I(age^2):male + yngkid:male, data = sleep75)
+summary(model_sleep_interaction)
+```
+Nothing is really stat sig here. 
+
+
+iii) Now, allow for a different intercept for males and females and determine whether interaction terms involving male are jointly significant. 
+
+```{r}
+model_sleep_intercept <- lm(sleep ~ totwrk + educ + age + I(age^2) + yngkid + male, data = sleep75)
+summary(model_sleep_intercept)
+linearHypothesis(model_sleep_interaction, c("totwrk:male = 0", "educ:male = 0", "age:male = 0", "I(age^2):male = 0", "yngkid:male = 0"))
+```
+
+Fails to reject null that the interaction terms are jointly insignificant. This means that the effect of the variables on sleep does not differ by gender, but there is a difference in the intercept.
+
+iv) Given these results,what would be your final model? 
+Given the results, I would choose the model with a different intercept for males and females. 
+This is because the interaction terms are not stat sig, which means that the effect of the variables on sleep does not differ by gender, but there is a difference in the intercept.
+
+
+C7. Use WAGE1 for exercise. 
+
+i) Use 7.18 to est gender difff when educ = 12.5
+
+$$lwage = \beta_0 + \beta_1 * female + \beta_2 * educ + \beta_3 * female * educ + \beta_4 * exper + \beta_5 * exper^2 + \beta_6 * tenure + \beta_7 * tenur^2$$
+
+```{r}
+data("wage1")
+
+# Subset for when educ = 12.5
+wage1_educ_12.5 <- subset(wage1, educ == 12.5)
+
+# Subset for when educ = 0
+wage1_educ_0 <- subset(wage1, educ == 0)
+
+# Estimate the model for educ = 12.5
+model_educ_12.5 <- lm(lwage ~ female + exper + I(exper^2) + tenure + I(tenure^2), data = wage1_educ_12.5)
+summary(model_educ_12.5)
+
+# Estimate the model for educ = 0
+model_educ_0 <- lm(lwage ~ female + exper + I(exper^2) + tenure + I(tenure^2), data = wage1_educ_0)
+summary(model_educ_0)
+```
+
+Stat sig that it's worse for women when educ = 12.5. At 0 the data is meaningless bc there are only 2 observations of people with 0 years of education, and have a wage. 
+
+
+ii) Run the regression but with female (educ - 12.5) replacing female * educ. How do you interpret the coefficient on female now? 
+```{r}
+data("wage1")
+wage1$educ_centered <- wage1$educ - 12.5
+model_wage  <- lm(lwage ~ female + educ_centered + female * educ_centered + exper + I(exper^2) + tenure + I(tenure^2), data = wage1)
+summary(model_wage)
+```
+
+Stat sig that being a woman, when educ = 12.5 and held fixed, is associated with a much lower wage. 
+
+iii) Yes it's stat sig in both
+
+
+C8. LOANAPP
+
+$$approve = \beta_0 + \beta_1 * white + \beta_2 * other factors + u$$
+
+i) Sign should be positive 
+
+ii) Regress approve on white. 
+
+```{r}
+data("loanapp")
+model_loan <- lm(approve ~ white, data = loanapp)
+summary(model_loan)
+```
+It is stat sig and it is 0.20 which is pretty big. 
+
+iii) Add hrat, obrat, loanprc... 
+
+
+```{r}
+model_loan_extended <- lm(approve ~ white + hrat + obrat + loanprc + unem + male + married + dep + sch + cosign + chist + pubrec + mortlat1 + mortlat2 + vr, data = loanapp)
+summary(model_loan_extended)
+```
+
+Coefficient goes down but still positive and practically significant and statistically significant. 
+
+Still discrim yah 
+
+iv) Now, allow effect of race to interact with the variable measuring other obligations as a % of income (obrat). Is the interaction term sig? 
+
+```{r}
+model_loan_interaction <- lm(approve ~ white + hrat + obrat + loanprc + unem + male + married + dep + sch + cosign + chist + pubrec + mortlat1 + mortlat2 + vr + white:obrat, data = loanapp)
+summary(model_loan_interaction)
+```
+
+It is stat sig but not practically alrge. 
+
+v) Limit obrat = 32. What is effect of being white? 
+
+```{r}
+loanapp_obrat_32 <- subset(loanapp, obrat == 32)
+dim(loanapp_obrat_32)
+model_loan_obrat_32 <- lm(approve ~ white + hrat + obrat + loanprc + unem + male + married + dep + sch + cosign + chist + pubrec + mortlat1 + mortlat2 + vr + white:obrat, data = loanapp_obrat_32)
+summary(model_loan_obrat_32)
+confint(model_loan_obrat_32, "white", level = 0.95)
+```
+
+Goes negative but it is not stat sig. 
+
+C9. 401ksubs. 
+
+i) What fraction of fams in sample are eligible for 401k plan 
+
+```{r}
+data("k401ksubs")
+sum(k401ksubs$e401k)/nrow(k401ksubs)
+```
+
+ii) Est linear prob model explaining int erms of income, age, and gender. income and age in quad form and report results in usual form. 
+
+```{r}
+model_401k <- lm(e401k ~ inc + I(inc^2) + age + I(age^2) + male, data = k401ksubs)
+summary(model_401k)
+```
+
+iii) No it is not independent as variables are quite stat sig. 
+
+Gender is independent though. 
+
+
+iv) Obtain fitted values. Are any fitted values negative or greater than 1 ?
+
+```{r}
+fitted_values <- fitted(model_401k)
+fitted_values_out_of_bounds <- sum(fitted_values < 0 | fitted_values > 1)
+```
+No values < 0 or grater than 1 
+
+v) Using fitted vals, define e401k = 1 if e401ki >= 0.5 and e401ki = 0 if e401ki < 0.5. What fraction of fams are predicted to be eligible for 401k plan?
+```{r}
+k401ksubs$e401k_predicted <- ifelse(fitted_values >= 0.5, 1, 0)
+sum(k401ksubs$e401k_predicted)/nrow(k401ksubs)
+```
+
+vi) For 5,638 fams not eligivle, what percent are predictived to have a 401k using e401ki. For those eligivle, what percentiage are predicted to have a 401k using e401ki.
+
+```{r}
+not_eligible <- subset(k401ksubs, e401k == 0)
+percent_predicted_eligible <- sum(not_eligible$e401k_predicted)/nrow(not_eligible)
+eligible <- subset(k401ksubs, e401k == 1)
+percent_predicted_eligible_for_eligible <- sum(eligible$e401k_predicted)/nrow(eligible)
+percent_predicted_eligible
+percent_predicted_eligible_for_eligible
+```
+
+vii) Correctly predicted is about 65%. Is this complete desc of how well the model does, given vi?
+No, because the model is predicting that 0% of the not eligible are eligible, and 100% of the eligible are eligible. So it is not doing a good job of predicting the not eligible, which is a large portion of the sample.
+
+
+viii) Add pira as an explanatory variable 
+```{r}
+model_401k_pira <- lm(e401k ~ inc + I(inc^2) + age + I(age^2) + male + pira, data = k401ksubs)
+summary(model_401k_pira)
+```
+
+About 2% more likely, and not stat sig.
+
+
+
+C10. NBASAL
+i) Estimate using center as base group
+```{r}
+data("nbasal")
+model_nbasal <- lm(points ~ exper + I(exper^2) + guard + forward, data = nbasal)
+summary(model_nbasal)
+```
+
+ii) You couldn't because they would be perfectly colinear. 
+
+iii) Do guards score more? holding experience fixed?
+
+Yes they do, 2.3 points per game more on average. It is stat sig to 5% level. 
+
+iv) Add marital status. Are married players more productive?
+
+```{r}
+model_nbasal_marital <- lm(points ~ exper + I(exper^2) + guard + forward + marr, data = nbasal)
+summary(model_nbasal_marital)
+```
+
+Not stat sig that married players score more. 
+
+v) Add itneractions of marr with exper. If so, does it affect ppg?
+
+```{r}
+model_nbasal_marital_interaction <- lm(points ~ exper + I(exper^2) + guard + forward + marr + marr:exper, data = nbasal)
+summary(model_nbasal_marital_interaction)
+```
+
+Not stat sig either. 
+
+vi) Estimate iv using assists per game instead. Any diffs?
+
+```{r}
+model_nbasal_assists <- lm(assists ~ exper + I(exper^2) + guard + forward + marr, data = nbasal)
+summary(model_nbasal_assists)
+```
+No doesn't really change all that much. 
+
+
+C11. 401ksubs. 
+
+i) Avg sd, min, max of nettfa
+```{r}
+data("k401ksubs")
+mean(k401ksubs$nettfa)
+sd(k401ksubs$nettfa)
+min(k401ksubs$nettfa)
+max(k401ksubs$nettfa)
+```
+
+ii) Test hyp does nettfa differ by 401k eligibility status. Use the two-sided alternative. What is $ amount of est diff. 
+
+```{r}
+model_nettfa_e401k <- lm(nettfa ~ e401k, data = k401ksubs)
+summary(model_nettfa_e401k)
+```
+
+$18K diff
+
+iii) Est as well using income, age, and e401k bc e401k is not exogenous
+
+```{r}
+model_nettfa_extended <- lm(nettfa ~ e401k + inc + age, data = k401ksubs)
+summary(model_nettfa_extended)
+```
+
+Now est dollar effect is $6K
+
+iv) Add interaction ecentering age on 41
+```{r}
+k401ksubs$age_centered <- k401ksubs$age - 41
+model_nettfa_interaction <- lm(nettfa ~ e401k + inc + age_centered + I(age_centered^2), data = k401ksubs)
+summary(model_nettfa_interaction)
+```
+
+Both terms are stat sig. 
+
+v) The effect differs by about $1.7K
+
+vi) Now drop interaction terms. Five family size dummy variables: fsize1, fsize2, fsize3, fsize4, fsize5. Choose a base group and add the other 4 as dummy variables.
+
+```{r}
+k401ksubs$fsize1 <- ifelse(k401ksubs$fsize == 1, 1, 0)
+k401ksubs$fsize2 <- ifelse(k401ksubs$fsize == 2, 1, 0)
+k401ksubs$fsize3 <- ifelse(k401ksubs$fsize == 3, 1, 0)
+k401ksubs$fsize4 <- ifelse(k401ksubs$fsize == 4, 1, 0)
+k401ksubs$fsize5 <- ifelse(k401ksubs$fsize == 5, 1, 0)
+
+model_nettfa_fsize <- lm(nettfa ~ e401k + inc + age_centered + I(age_centered^2) + fsize1 + fsize2 + fsize3 + fsize4, data = k401ksubs)
+summary(model_nettfa_fsize)
+```
+
+fsize1 is stat sig at 1% level and fsize2 is stat sig at 5% level. The rest are not stat sig.
+
+vii) Now, do a Chow test fort the model across the 5 family size categories, allowing for intercept differences. 
+
+C12. BEAUTY
+
+i) Find sep fractions of men / women classified as having above average looks 
+
+```{r}
+dataset("beauty")
+
+beauty_men <- subset(beauty, female == 0)
+beauty_women <- subset(beauty, female == 1)
+
+sum(beauty_men$abvavg)/nrow(beauty_men)
+sum(beauty_women$abvavg)/nrow(beauty_women)
+```
+
+More people rated as below average looks. More than half, too 
+
+ii) Test null that pop fractions of above avg look
+
+```{r}
+model_beauty <- lm(abvavg ~ female, data = beauty)
+summary(model_beauty)
+```
+
+iii) Now estimate 
+
+$$lwage = \beta_0 + \beta_1 * belavg + \beta_2 abvavg + u$$
+
+Separately for men and women 
+
+```{r}
+model_wage_men <- lm(lwage ~ belavg + abvavg, data = beauty_men)
+model_wage_women <- lm(lwage ~ belavg + abvavg, data = beauty_women)
+summary(model_wage_men)
+summary(model_wage_women)
+```
+
+It's the one sided hypothesis test that B1 = 0. 
+
+iv) No there is no convincing evidence as no statistical significance nor any practical sgnificance either. 
+
+v) Add variables
+
+```{r}
+model_wage_expanded <- lm(lwage ~ belavg + abvavg + educ + exper + I(exper^2) + union + goodhlth + black + married + south + bigcity + smllcity + service, data = beauty)
+
+summary(model_wage_expanded)
+```
+
+No they may even get slightly worse. 
+
+vi) Use SSR form of Chow F stat to test whether reg functions differ across men and women. Allow for an intercept shift under the null 
+
+
+```{r}
+model_men <- lm(lwage ~ belavg + abvavg + educ + exper + I(exper^2) + union + goodhlth + black + married + south + bigcity + smllcity + service, data = beauty_men)
+model_women <- lm(lwage ~ belavg + abvavg + educ + exper + I(exper^2) + union + goodhlth + black + married + south + bigcity + smllcity + service, data = beauty_women)
+model_combined <- lm(lwage ~ belavg + abvavg + educ + exper + I(exper^2) + union + goodhlth + black + married + south + bigcity + smllcity + service + female, data = beauty)
+SSR_men <- sum(resid(model_men)^2)
+SSR_women <- sum(resid(model_women)^2)
+SSR_combined <- sum(resid(model_combined)^2)
+n_men <- nrow(beauty_men)
+n_women <- nrow(beauty_women)
+n_combined <- nrow(beauty)
+k <- length(coef(model_combined)) - 1
+F_chow <- ((SSR_combined - (SSR_men + SSR_women)) / k) / ((SSR_men + SSR_women) / (n_men + n_women - 2 * k))
+F_chow
+```
+F stat is 4.016251 which is greater than the critical value of 3.89 at the 5% level, so we reject the null that the regression functions are the same for men and women 
+
+C13. APPLE
+
+i) Define binary as ecobuy = 1 if ecolbs > 0 and ecobuy = 0 if ecolbs = 0 
+
+```{r}
+data("apple")
+apple$ecobuy <- ifelse(apple$ecolbs > 0, 1, 0)
+
+sum(apple$ecobuy)/nrow(apple)
+``` 
+
+ii) Estimate linear model 
+$$ecobuy = \beta_0 + \beta_1 * ecoprc + \beta_2 * regprc + \beta_3 * faminc + \beta_4 * hhsize + \beta_5 * educ + \beta_6 * age + u$$
+
+```{r}
+model_apple <- lm(ecobuy ~ ecoprc + regprc + faminc + hhsize + educ + age, data = apple)
+summary(model_apple)
+```
+
+iii) Are nonprice variables jointly significant?Which explanatory variable other than price has the most important effect on decision to buy eco friendly products?
+
+Level of education is most important. 
+
+```{r}
+linearHypothesis(model_apple, c("faminc = 0", "hhsize = 0", "educ = 0", "age = 0"))
+```
+
+iv) Replace faminc with logfaminc
+```{r}
+model_apple_logfaminc <- lm(ecobuy ~ ecoprc + regprc + log(faminc) + hhsize + educ + age, data = apple)
+summary(model_apple_logfaminc)
+```
+
+logfaminc works sligthly better, but only really slighhtly (R-squared is 0.0002 higher)
+
+Coefficient is sligthly positive (0.0445) meaning that higher family income is associated with a higher probability of buying eco friendly products, but it is not stat sig.
+
+v) 2 probabilities are negative. 4 are bigger than 1. Sure, could be problematic in that the probabilties are 0 when they should be between 0 and 1. 
+
+vi) Copmute percent correctly predicted for each outcome. What outcome best predicted by the model?
+
+```{r}
+apple$ecobuy_predicted <- ifelse(fitted(model_apple_logfaminc) >= 0.5, 1, 0)
+percent_correct_0 <- sum(apple$ecobuy == 0 & apple$ecobuy_predicted == 0)/sum(apple$ecobuy == 0)
+percent_correct_1 <- sum(apple$ecobuy == 1 & apple$ecobuy_predicted == 1)/sum(apple$ecobuy == 1)
+percent_correct_0
+percent_correct_1
+```
+
+Best predicted is when they bought the eco apples at 83%. 
+
+
+
+
+C14. CHARITY
+
+i) Est LPM 
+```{r}
+data("charity")
+head(charity)
+model_charity <- lm(respond ~ resplast + avggift, data=charity)
+summary(model_charity)
+```
+
+
+0.343 and is stat sig meaning if responded to previous mailing was 34.3% more likely to respond with donation on current mailing. 
+
+ii) Does avg val of past gifts affect prob of responding?
+
+Not really, as it is not stat sig.
+
+iii) Add propresp 
+
+```{r}
+model_charity_propresp <- lm(respond ~ resplast + avggift + propresp, data=charity)
+summary(model_charity_propresp)
+```
+
+The higher the proportion of prior resopnses is associated with a higher probability of responding to the current mailing, and it is stat sig at the 1% level. Very practically significant as well.
+
+iv) Resplast went down. Yes this should go down because more signal going into propresp, which is the subset to which resplast is contained in. 
+
+v) Add mailsyear
+
+```{r}
+model_charity_mailsyear <- lm(respond ~ resplast + avggift + propresp + mailsyear, data=charity)
+summary(model_charity_mailsyear)
+```
+
+Relatively small but stat sig. 
+
+Not a good estimate because the number of mailings in the year is likely correlated with the unobserved characteristics of the charity, which are likely to be correlated with the probability of responding to the mailing.
+
+
+C15. FERTIL2 
+
+i) Smallest and largest values of children . Avg. Do any women have exactly the avg number?
+
+```{r}
+data("fertil2")
+min(fertil2$children)
+max(fertil2$children)
+mean_children <- mean(fertil2$children)
+```
+No, no woman can have 0.26 of a child. 
+
+
+ii) What percent of women have electricity in the home?
+
+```{r}
+fertil2_electric <- subset(fertil2, !is.na(electric))
+sum(fertil2_electric$electric)/ nrow(fertil2_electric)
+# sum(fertil2_electric$electric)/nrow(fertil2_electric)
+```
+
+iii) Compute avg o fchildren for those w/o eletrictiy and for those with. Are pop means the same?
+
+```{r}
+fertil2_electric_yes <- subset(fertil2, electric == 1)
+fertil2_electric_no <- subset(fertil2, electric == 0)
+mean_children_electric_yes <- mean(fertil2_electric_yes$children)
+mean_children_electric_yes
+mean_children_electric_no <- mean(fertil2_electric_no$children)
+mean_children_electric_no
+
+model_fertil2 <- lm(children ~ electric, data = fertil2)
+summary(model_fertil2)
+```
+
+Electricity negatively associated with number of children, and it is stat sig at the 1% level.
+
+iv) If they have electrictiy, they can get educated and don't need to rely on children as labor support. They can work outside the home and also don't need to be married 
+
+v) Add age ^2 and urban and three religious affiliation dummies. Is electricity still stat sig?
+
+```{r}
+model_fertil2_extended <- lm(children ~ electric + age + I(age^2) + urban + spirit + protest + catholic, data = fertil2)
+summary(model_fertil2_extended)
+```
+
+Estimate on electric gets even igger and still stat sig. 
+
+vi) Add interaction between electric and educ. Is electric still stat sig? What happens to coefficient? 
+
+```{r}
+model_fertil2_interaction <- lm(children ~ electric + age + I(age^2) + urban + spirit + protest + catholic + educ + electric:educ, data = fertil2)
+summary(model_fertil2_interaction)
+```
+
+Electricity loses practical and statistical significance.  
+
+vii) Med / mode = 7. Center interaction term on educ = 7. What hapens to coefficient? Why? 
+
+```{r}
+fertil2$educ_centered <- fertil2$educ - 7
+model_fertil2_centered <- lm(children ~ electric + age + I(age^2) + urban + spirit + protest + catholic + educ_centered + electric:educ_centered, data = fertil2)
+summary(model_fertil2_centered)
+```
+Electric goes back up in significance practically and statistically. 
+
+C16. CATHOLIC 
+
+i) What percent of students attend a catholicHS? What's avg of math12 in sample 
+
+```{r}
+data("catholic")
+sum(catholic$cathhs) / nrow(catholic)
+mean(catholic$math12)
+```
+
+ii) Regress math12 on cathhs 
+
+```{r}
+model_catholic <- lm(math12 ~ cathhs, data = catholic)
+summary(model_catholic)
+```
+
+Catholic HS students score about 3.5 points better in math12 standardized test, and it is stat sig. 
+
+
+iii) Add lfaminc, motheduc, fatheduc. 
+
+```{r}
+nrow(catholic)
+
+model_catholic_extended <- lm(math12 ~ cathhs + lfaminc + motheduc + fatheduc, data = catholic)
+summary(model_catholic_extended)
+```
+
+Effect of cathhs goes down but it's still positive and stat sig. 
+
+iv) Restrict .. huh? 
+
+v) in iii) add interactions between cathhs and other explanatory variables. Are any of the interaction terms individually or jointly stat sig?
+```{r}
+model_catholic_interaction <- lm(math12 ~ cathhs + lfaminc + motheduc + fatheduc + cathhs:lfaminc + cathhs:motheduc + cathhs:fatheduc, data = catholic)
+summary(model_catholic_interaction)
+
+anova(model_catholic_extended, model_catholic_interaction)
+
+```
+
+No none of the interaction terms are stat sig. They are also not jointly significant. 
+
+vi) Cathhs practically goes up, but stat signess goes down. 
+
+vii) Copmute average partial effect of cathhs in v) How does it compare with coefficients on cathhs in iii) and v) 
+
+```{r}
+
+coef(model_catholic_interaction)["cathhs"]
+
+coef(model_catholic_extended)["cathhs"]
+# mean_lfaminc <- mean(catholic$lfaminc)
+# mean_motheduc <- mean(catholic$motheduc)
+# mean_fatheduc <- mean(catholic$fatheduc)
+# average_partial_effect_cathhs <- coef(model_catholic_interaction)["cathhs"] + coef(model_catholic_interaction)["cathhs:lfaminc"] * mean_lfaminc + coef(model_catholic_interaction)["cathhs:motheduc"] * mean_motheduc + coef(model_catholic_interaction)["cathhs:fatheduc"] * mean_fatheduc
+# average_partial_effect_cathhs
+# coef(model_catholic_extended)["cathhs"]
+# coef(model_catholic_interaction)["cathhs"]
+```
+Much higher. 
+
+C17. JTRAIN98 
+
+i) What % of workers was unemployed in 1998 after job training program? How does this copmare with unemployment rate in 1996. 
+
+```{r}
+data("jtrain98")
+jtrain98_trained <- subset(jtrain98, train == 1)
+sum(jtrain98_trained$unem98)/nrow(jtrain98_trained)
+
+sum(jtrain98$unem96)/nrow(jtrain98)
+```
+Lower than unemployment in 96 
+
+ii) Run regression unem98 on train. 
+
+```{r}
+model_jtrain <- lm(unem98 ~ train, data = jtrain98)
+summary(model_jtrain)
+```
+
+Not large and not stat sig (and positive!!). Doesn't make sense to me. Thought it would be larger given the difference in 96 -> 98 employment rates. 
+
+iii) Add earn96, educ, age, married 
+
+```{r}
+model_jtrain_extended <- lm(unem98 ~ train + earn96 + educ + age + married, data = jtrain98)
+summary(model_jtrain_extended)
+```
+
+Now it is negative and stat sig at the 5% level, which makes more sense.  Differs a lot because controlled for other variables that are likely correlated with both train and unem98.
+
+iv) Now regress adjust by running against full set of interactions where all variables are trained around sample means. 
+
+```{r}
+jtrain98$earn96_centered <- jtrain98$earn96 - mean(jtrain98$earn96)
+jtrain98$educ_centered <- jtrain98$educ - mean(jtrain98$educ)
+jtrain98$age_centered <- jtrain98$age - mean(jtrain98$age)
+model_jtrain_interaction <- lm(unem98 ~ train + earn96_centered + educ_centered + age_centered + married + train:earn96_centered + train:educ_centered + train:age_centered + train:married, data = jtrain98)
+summary(model_jtrain_interaction)
+```
+
+Loses statistical significance but still stat sig, loses a bit of practical significance as well.
+
+Standard error does not change
+
+v) Are interaction terms jointly significant?
+```{r}
+linearHypothesis(model_jtrain_interaction, c("train:earn96_centered = 0", "train:educ_centered = 0", "train:age_centered = 0", "train:married = 0"))
+``` 
+
+No they are not 
+
+vi) 

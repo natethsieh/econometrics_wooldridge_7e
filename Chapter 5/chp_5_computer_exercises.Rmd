@@ -1,0 +1,208 @@
+---
+title: "Chapter 5 Computer Exercises"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(wooldridge)
+library(car)
+```
+
+C1. **Question:** Use the data in WAGE1 for this exercise. 
+
+i) Estimate the equation 
+
+$$wage = \beta_0 + \beta_1 educ + \beta_2 exper + \beta_3 tenure + u$$
+
+Save the residuals and plot a histogram. 
+
+```{r}
+data("wage1")
+model <- lm(wage ~ educ + exper + tenure, data = wage1)
+residuals <- resid(model)
+hist(residuals, main = "Histogram of Residuals", xlab = "Residuals")
+```
+
+ii) Repeat i) but with log(wage) as the dependent variable
+
+```{r}
+model_log <- lm(log(wage) ~ educ + exper + tenure, data = wage1)
+residuals_log <- resid(model_log)
+hist(residuals_log, main = "Histogram of Residuals (Log Wage)", xlab = "Residuals")
+``` 
+
+iii) Would you say that Assumption MLR.6 is closer to being satiisfied for the level-level model or the log-level model?
+
+Log-level because looks more normally distributed. 
+
+C2. **Question:** Use the data in GPA2 for this exercise. 
+
+i) Using all 4,137 obserations, estimate the equation
+
+$$colGPA = \beta_0 + \beta_1 hsperc + \beta_2 sat + u$$
+
+```{r}
+data("gpa2")
+model_gpa <- lm(colgpa ~ hsperc + sat, data = gpa2)
+summary(model_gpa)
+```
+
+ii) Restimate using the first 2,070 obseratoins 
+```{r}
+model_gpa_half <- lm(colgpa ~ hsperc + sat, data = gpa2[1:2070, ])
+summary(model_gpa_half)
+```
+
+
+iii) Find the ratio of the standard errors on $hsperc$ from parts i) and ii). Compare this with the result from 5.10
+
+The ratio of standard errors can be calculated as follows:
+```{r}
+se_full <- summary(model_gpa)$coefficients["hsperc", "Std. Error"]
+se_half <- summary(model_gpa_half)$coefficients["hsperc", "Std. Error"]
+ratio_se <- se_full / se_half
+ratio_se
+```
+
+```{r}
+sqrt(2070/4137)
+```
+
+
+C3. **Question:** In equation (4.42) of Chapter 4, using the data set BWGHT, copmute the LM statistic for testing whether $motheduc$ and $fatheduc$ are jointly 
+significant. In obtaining the residuals for the restricted model, be sure that the restricted moel is estimated 
+using only those oservations for which all variables in the unrestricted model are available (see Example 4.9). 
+
+```{r}
+data("bwght")
+
+# Filter for complete cases
+bwght_complete <- bwght[complete.cases(bwght[, c("bwght", "cigs", "parity", "faminc", "motheduc", "fatheduc")]), ]
+
+# Unrestricted model
+unrestricted_model <- lm(bwght ~ cigs + parity + faminc + motheduc + fatheduc, data = bwght_complete)
+# Restricted model
+restricted_model <- lm(bwght ~ cigs + parity + faminc, data = bwght_complete)
+# LM statistic calculation
+residuals_restricted <- resid(restricted_model)
+
+# Regress restricted residuals on all independent variables
+auxiliary_reg <- lm(residuals_restricted ~ cigs + parity + faminc + motheduc + fatheduc, data = bwght_complete)
+summary(auxiliary_reg)
+r_squared <- summary(auxiliary_reg)$r.squared
+n <- nrow(bwght_complete)
+n* r_squared
+
+# another way to do it, per claude
+SSR_restricted <- sum(residuals_restricted^2)
+SSR_unrestricted <- sum(resid(unrestricted_model)^2)
+n <- nrow(bwght_complete)
+k <- 2 # number of restrictions (motheduc and fatheduc)
+LM_statistic <- (SSR_restricted - SSR_unrestricted) / SSR_unrestricted * n
+LM_statistic
+```
+
+
+C4. **Question:** Detect nonnormality in underlying population distrbiutions. 
+
+i) Use 401ksubs, keeping only observations with fsize = 1. Find the skewness measure for inc. Same for log(inc). Which has mroe skewness and seems less liekly to e normally distributed?
+```{r}
+data("k401ksubs")
+install.packages("moments")
+library(moments)
+data_401k <- subset(k401ksubs, fsize == 1)
+skewness_inc <- skewness(data_401k$inc, na.rm = TRUE)
+skewness_log_inc <- skewness(log(data_401k$inc), na.rm = TRUE)
+skewness_inc
+skewness_log_inc
+```
+
+log(inc) seems mroe normally distributed than the inc. 
+
+ii) Use BWGHT2. Find the skewness measures for beght and log(bwght). What do you conclude?
+```{r}
+data("bwght2")
+skewness_bwght <- skewness(bwght2$bwght, na.rm = TRUE)
+skewness_log_bwght <- skewness(log(bwght2$bwght), na.rm = TRUE)
+skewness_bwght
+skewness_log_bwght
+```
+
+bwght less skewed than log(bwght). This makes sense to me because birth weights cannot be negative or 0, so log transformation would skew right.
+
+
+iii) The two examples above are contradictions to this statement; enough said. 
+
+iv) If we are interested in the normality assumption in the context of regression, should we be evaluatiing the unconditional distributions of y and log(y)? Explain
+
+No. We should be evaluating the conditional distributions of the error term u and log(u) given X.
+
+C5. **Question:** Consider C11 analysis using HTV. 
+i) How many different values are taken on by educ in the sample? Does educ have a continuous distribution?
+```{r}
+data("htv")
+num_educ_values <- length(unique(htv$educ))
+num_educ_values
+unique(htv$educ)
+```
+
+no it is not continuous; 15 different values
+
+ii) Plot a histogram of educ with a normal distribution overlay. Does the distribution of educ appear anything close to normal?
+
+```{r}
+hist(htv$educ, probability = TRUE, main = "Histogram of educ with Normal Overlay", xlab = "educ")
+x_vals <- seq(min(htv$educ), max(htv$educ), length.out = 100)
+y_vals <- dnorm(x_vals, mean = mean(htv$educ), sd = sd(htv$educ))
+lines(x_vals, y_vals, col = "red")
+```
+
+no these don't look normal whatsoever
+
+iii) Which of the CLM assumptions seems clearly violated in the model? How does this violation change the statistical inference procedures carried out in Computer Exercise C11 in Chapter 4. 
+
+error can't be normally distributed because educ is not continuous, which violates MLR.6. This means that the t-stats and F-stats used in C11 may not be valid, but that depends on sample size.
+
+
+
+
+
+C6. **Question:** Use the data in ECONMATH to answer the question. 
+
+i) Logically, what are the smallest and largest values that can be taken on by the variable score?
+
+```{r}
+data("econmath")
+min_score <- min(econmath$score, na.rm = TRUE)
+max_score <- max(econmath$score, na.rm = TRUE)
+min_score
+max_score
+```
+
+ii) Consider the linear model $score = \beta_0 + \beta_1 colgpa + \beta_2 actmath + \beta_3 acteng + u$. Why cannot Assumption MLR.6 hold for error term u? What consequences does this have for 
+using the t-stat to test $H0: \beta_3 = 0$?
+
+Because score is bounded between 0 and 100, the error term u cannot be normally distributed as it would imply that score could take on values outside this range. 
+This violates MLR.6 which assumes that the error term is normally distributed. 
+
+As a consequence, using the t-statistic to test $H0: \beta_3 = 0$ may not be valid since the underlying assumption of normality is violated. But this will depend on sample size.
+
+iii) Estimate the model from part (ii) and obtain the t-stat and associated p-value for testing $H0: \beta_3 = 0$. How would you defend your findings to someone who makes the following statement: 
+"You cannot trust that p-value because clearly the error term in the equation cannot have a normal distribution"
+
+```{r}
+data("econmath")
+model_score <- lm(score ~ colgpa + actmth + acteng, data = econmath)
+summary(model_score)
+
+# t-statistic for acteng
+beta_acteng <- summary(model_score)$coefficients["acteng", "Estimate"]
+se_acteng <- summary(model_score)$coefficients["acteng", "Std. Error"]
+t_stat_acteng <- beta_acteng / se_acteng
+t_stat_acteng
+
+nrow(econmath)
+```
+sample size is pretty big 856
+
+

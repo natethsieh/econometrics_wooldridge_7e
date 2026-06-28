@@ -1,0 +1,72 @@
+---
+title: "Chapter 6 Problems"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(wooldridge)
+library(car)
+```
+
+1. This generality makes sense, as at a certain point, CEOs might start taking less salary and more stock options. 
+
+2. Intrinsic
+
+3. RDCHEM
+i) When does marginal effect of sales become negative?
+```{r}
+0.0000000070*2 / 0.003
+```
+
+ii) Would you keep quad term? 
+Honestly, no. It doesn't make swense to me that sales eventually has a negative effect on rdintens, and if anything, i'd expect the inverse. The more you sell, the more you should invest in R&D .
+
+iii) No effect on Rsquared or standard errors. 
+
+iv) salesbil probably because easier to interpret
+
+4. pareduc 
+
+i) expect B2 to be positive 
+
+ii) WAGE2 
+```{r}
+data("wage2")
+# wage2$wage
+2 ^ (12 *0.00078)
+```
+Another year of educ * pareduc adds a dollar of monthly salary, roughly
+
+iii) Yes it does depend positively on parent educ, up until a certain point
+
+5. No because theyw ouldn't have taken an 11th grade science exam when they'd finished their math10 exam?
+
+6. I dunno, probably not. what is an interaction term between ACT and attendance rate supposed to signify. 
+
+7. The following three equations were estimated using the 1534 observations in 401k.
+$$ prate = 80.29 + 5.44 mrate + .269 age - 0.00013 totemp $$
+$$ (0.78) \quad (0.52) \quad (0.045) \quad (0.00004) $$
+$$ R^2 = 0.100, \quad \bar{R}^2 = 0.098 $$
+
+The second, principally because it is just very readable (not too many decimals)
+
+8. Suppose we want to estimate the effects of alcohol consumption on college grade point average. In addition to collecting information on grade point averages and alcohol usage, we also obtain attendance information. Say percentage of lectures attended, a standardized test score, and high school GPA are also available.
+
+i) Should we include attend along with alcohol as explanatory variables in a multiple regression model. Think about how you would interpret beta alcohol.
+
+Yeah, this will likely be over-controlling because attendance is a causal pathway with which college GPA is very low.
+
+ii) Should SAT and HSGPA be included as explanatory variables?
+
+Yes they should be included because they are not linked to the same causal pathway as college GPA, but they are correlated, but not totally collinear, which would result in failing the assumptions of a linear regression model.
+
+9. Wahh. This problem deals with the properties of prediction intervals when working with log-transformed dependent variables in a Classical Linear Model (CLM).Here is the step-by-step breakdown for Question 9.Part (i): For what values of $\hat{\sigma}$ will the point prediction be in the 95% prediction interval?To solve this, we compare the point prediction $\hat{y}^0$ to the boundaries of the provided 95% prediction interval $[L, U]$.Point Prediction: $\hat{y}^0 = \exp(\hat{\sigma}^2/2) \exp(\widehat{\log y^0})$Prediction Interval Lower Bound ($L$): $\exp(-1.96\hat{\sigma}) \exp(\widehat{\log y^0})$Prediction Interval Upper Bound ($U$): $\exp(1.96\hat{\sigma}) \exp(\widehat{\log y^0})$For the point prediction to be inside the interval, it must satisfy $L < \hat{y}^0 < U$. Since the $\exp(\widehat{\log y^0})$ term is common to all three expressions and is always positive, we can divide it out and focus on the relationship between the $\hat{\sigma}$ terms:$$\exp(-1.96\hat{\sigma}) < \exp(\hat{\sigma}^2/2) < \exp(1.96\hat{\sigma})$$Because the exponential function is strictly increasing, we can take the natural log of all sides:$$-1.96\hat{\sigma} < \frac{\hat{\sigma}^2}{2} < 1.96\hat{\sigma}$$1. Solving the right side ($\frac{\hat{\sigma}^2}{2} < 1.96\hat{\sigma}$):Since $\hat{\sigma} > 0$, we can divide by $\hat{\sigma}$:$$\frac{\hat{\sigma}}{2} < 1.96 \implies \hat{\sigma} < 3.92$$2. Solving the left side ($-1.96\hat{\sigma} < \frac{\hat{\sigma}^2}{2}$):Since $\hat{\sigma}$ and $\hat{\sigma}^2$ are positive, this condition is always true (a negative number is always less than a positive number).Conclusion for (i): The point prediction $\hat{y}^0$ will be in the 95% prediction interval if $\hat{\sigma} < 3.92$.
+
+10. lexppp
+i) First is more relevant because seonc overcontrols as reading scores correlate highly with math scores. 10% increase in expenditures results in a 9.01 / 100 * .1 = 0.00901 increase in test scores. 
+
+ii) Yeah it pretty significantly changes estimates and standard errors. 
+
+iii) Overcontrolling / collinearity 
+
+11. Proof. 

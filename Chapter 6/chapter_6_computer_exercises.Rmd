@@ -1,0 +1,732 @@
+---
+title: "Chapter 5 Computer Exercises"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(wooldridge)
+library(car)
+```
+
+C1. Use datain KIELMC 
+
+i) Regression: $log(price) = \beta_0 + \beta_1 log(dist) + u$
+
+Expect positive sign for $beta_1$. More distance = better price
+
+```{r}
+data("kielmc")
+model_kielmc <- lm(log(price) ~ log(dist), data = kielmc)
+summary(model_kielmc)
+```
+
+ii) Add variables
+
+$$log(price) = \beta_0 + \beta_1 log(dist) + \beta_2 log(dist)^2 + \beta_3 log(intst) + \beta_4 log(intst)^2 + \beta_5 log(area) + \beta_6 log(land) + \beta_7 rooms + \beta_8 baths + \beta_9 age + u$$
+
+```{r}
+model_kielmc_full <- lm(log(price) ~ log(dist) + I(log(dist)^2) + log(intst) + I(log(intst)^2) + log(area) + log(land) + rooms + baths + age, data = kielmc)
+summary(model_kielmc_full)
+```
+
+Still has a positive effect but isn't stat sig. at all. 
+
+Now we are controlling for a lot of other variables, which is likely why the effect of distance is no longer significant.
+
+iii) Now dist becomes stat sig and positive. This says to me that distance from interstate is relevant up until a certain point, after which variables like area, land, become more significant. This interaction term is very important. 
+
+iv) Not it is not sigificant. 
+
+
+
+C2. Use data from WAGE1. 
+
+i) $ log(wage) = \beta_0 + \beta_1 educ + \beta_2 exper + \beta_3 exper^2 + u$
+
+```{r}
+data("wage1")
+model_wage1 <- lm(log(wage) ~ educ + exper + I(exper^2), data = wage1)
+summary(model_wage1)
+```
+
+ii) Is exper^2 stat sig at 1%?
+
+Yes 
+
+iii) Return of ffith year of experience 
+
+```{r}
+100 * (0.0410089 + 2 * -.0007136 * 5)* 1
+
+100 * (0.0410089 + 2 * -.0007136 * 20)* 1
+```
+
+iv) When does it lower predicted wage?
+
+```{r}
+- 0.0410089 / (2 * -0.0007136)
+
+```
+
+29 years of experience -> after that, the return to experience becomes negative.
+
+```{r}
+# wage1[wage1$exper > 29,] 
+nrow(wage1[wage1$exper >= 29,])
+
+```
+121
+
+C3. Consider a model where return to educ depends on work exper and vice versa 
+
+$$ log(wage) = \beta_0 + \beta_1 educ + \beta_2 exper + \beta_3 educ*exper + u $$
+
+i) Show return to another year of educ depends on exper.
+
+This is just the derivative wrt to exper, which is $beta_1 + beta_3 * exper$
+
+ii) State the null that return to educ does not depend on exper. 
+
+$H_0: \beta_3 = 0$
+
+Appropriate alternative is $H_a: \beta_3 > 0$
+
+iii) Use wage2 to test null 
+
+```{r}
+data("wage2")
+model_wage2 <- lm(log(wage) ~ educ + exper + educ*exper, data = wage2)
+summary(model_wage2)
+```
+
+
+```{r}
+# Extract the coefficient and standard error for educ:exper interaction
+coef_educ_exper <- coef(model_wage2)["educ:exper"]
+se_educ_exper <- summary(model_wage2)$coefficients["educ:exper", "Std. Error"]
+
+# Calculate t-statistic
+t_stat <- coef_educ_exper / se_educ_exper
+print(t_stat)
+
+# Calculate p-value for one-tailed test (H_a: beta_3 > 0)
+p_value <- 1 - pt(t_stat, df = model_wage2$df.residual)
+print(p_value)
+```
+
+Doesn't reject but the coefficient is very small 
+
+iv) Return to another year of educ for someone with 10 years of experience
+
+
+C4. Use data in GPA2 
+
+i) Estimate the model 
+
+$$ sat = \beta_0 + \beta_1 hsize + \beta_2 hsize^2 + u $$
+
+```{r}
+data("gpa2")
+model_gpa2 <- lm(sat ~ hsize + I(hsize^2), data = gpa2)
+summary(model_gpa2)
+```
+
+Yes the quadratic term is stat sig
+
+ii) Use equation; what is "optimal" high school size? Justify your answer
+
+```{r}
+optimal_hsize <- -coef(model_gpa2)["hsize"] / (2 * coef(model_gpa2)["I(hsize^2)"])
+print(optimal_hsize)
+```
+
+469 students is optimal 
+
+Point at which size begins to have a negative effect on SAT scores.
+
+iii) Is analysis rep of academic performance of all high school seniors? Explain 
+
+Now this is just a sample of 4,137 high schools. Also this is recorded of only those that made it to college!!
+
+```{r}  
+nrow(gpa2)
+```
+
+
+iv) Use log(sat), what is optimal high school size?
+
+```{r}
+model_gpa2_log <- lm(log(sat) ~ hsize + I(hsize^2), data = gpa2)
+summary(model_gpa2_log) 
+
+optimal_hsize_log <- -coef(model_gpa2_log)["hsize"] / (2 * coef(model_gpa2_log)["I(hsize^2)"])
+print(optimal_hsize_log)
+```
+
+Yes it changes, but only sligthly
+
+
+
+C5. Use HPRICE1
+
+i) Estimate the model 
+$$log(price) = \beta_0 + \beta_1 log(lotsize) + \beta_2 log(sqrft) + \beta_3 bdrms + u$$
+
+```{r}
+data("hprice1")
+model_hprice1 <- lm(log(price) ~ log(lotsize) + log(sqrft) + bdrms, data = hprice1)
+summary(model_hprice1)
+```
+
+ii) Find predicted val when lotsize = 20,000 and sqrft = 2,500 and bdroms = 4
+
+```{r}
+new_data <- data.frame(lotsize = 20000, sqrft = 2500, bdrms = 4)
+predicted_log_price <- predict(model_hprice1, newdata = new_data)
+predicted_price <- exp(predicted_log_price)
+print(predicted_price)
+```
+
+```{r}
+residuals <- residuals(model_hprice1)
+smearing_factor <- mean(exp(residuals))
+predicted_price_smearing <- exp(predicted_log_price) * smearing_factor
+print(predicted_price_smearing)
+```
+
+iii) Do you prefer log or price? 
+
+```{r}
+data("hprice1")
+model_hprice2 <- lm(price ~ log(lotsize) + log(sqrft) + bdrms, data = hprice1)
+summary(model_hprice2)
+```
+
+The log(price) regression is just more comprehensible to me. The coefficients are easier to interpret.
+
+
+C6. Use VOTE1 
+
+i) Consider model with interaction between expenses
+
+$$voteA = \beta_0 + \beta_1 prtystrA + \beta_2 expendA + \beta_3 expendB + \beta_4 expendA*expendB + u$$
+
+Partial efect of expendB on votaA = $\beta_3 + \beta_4 * expendA$
+
+Partial effect of expendA on votA = $\beta_2 + \beta_4 * expendB$
+
+Yeah it should be negative as massive spending leads to diminishing returns. 
+
+ii) Estimate the equation and report results.
+
+```{r}
+data("vote1")
+model_vote1 <- lm(voteA ~ prtystrA + expendA + expendB + expendA*expendB, data = vote1)
+summary(model_vote1)
+```
+
+No it isn't stat sig. 
+
+iii) What's average of expendA?
+
+```{r}
+mean(vote1$expendA)
+```
+
+Fix expend at 300; waht's est effct of another $100,000 spent by candB on votA? is it large?
+
+```{r}
+expendA_fixed <- 300
+additional_expendB <- 100
+
+(-0.03172 + -0.000006629 * 300) * 100
+```
+
+```{r}
+mean(vote1$voteA)
+```
+
+Not a large effect. More spending by candidate B leads to a small decrease in vote share for candidate A, about -3.3%
+
+iv) Now fix expendB at 100. 
+
+```{r}
+(0.03828 - 0.000006629 * 100) * 100
+```
+
+More expenses by cand A (additional $100,000) leads to a roughly 3.7% increase in vote share for candidate A.
+
+v) Replace interaction with shareA. 
+
+```{r}
+data("vote1")
+model_vote2 <- lm(voteA ~ prtystrA + expendA + expendB + shareA, data = vote1)
+summary(model_vote2)
+```
+
+No you can't hold expendA and expendB fixed when you hold shareA fixed. ShareA is a function of both expendA and expendB, so it doesn't make sense to hold them all fixed at the same time.
+
+vi) Lol
+
+Put in term and chain rule it for deriv and input values. 
+
+
+
+C7. ATTEND
+
+i) Example 6.3, ATTEND dataset
+$$ stndfnl = \beta_0 + \beta_1 atndrte + \beta_2 priGPA + \beta_3 ACT + \beta_4 priGPA ^2 + \beta_5 ACT^2 + \beta_6 priGPA * atndrte + u $$
+
+Yes this is just the derivative wrt priGPA. 
+
+```{r}
+-1.63 + 2 * 2.96 * 2.59 + 0.0056 * 82
+```
+
+The interpretation is that, holding atndrte and ACT fixed, a one unit increase in priGPA leads to an increase in 14% in stndfnl 
+
+ii) Do the substititution and take the regression to get the standard error of the partial effect. 
+
+iii) This is the partial effect on a very specific situation; when a student has an attendrate rate of 82 AND a GPA of 2.59.
+
+C8. Data = HPRICE1
+
+i) Estimate $price = \beta_0 + \beta_1 lotsize + \beta_2 sqrft + \beta_3 bdrms + u$
+
+```{r}
+model_hprice3 <- lm(price ~ lotsize + sqrft + bdrms, data = hprice1)
+summary(model_hprice3)
+
+new_data <- data.frame(lotsize = 10000, sqrft = 2300, bdrms = 4)
+predicted_price <- predict(model_hprice3, newdata = new_data)
+print(predicted_price)
+```
+
+
+ii) Regress to get a 95% CI on predicted value in i) 
+
+```{r}
+predicted_price_ci <- predict(model_hprice3, newdata = new_data, interval = "confidence", level = 0.95)
+print(predicted_price_ci)
+```
+
+
+iii) Let price0 be unknown future selling price of the house with chars in i) and ii). Find a 95% CI for price0 and comment on width of CI. 
+```{r}
+predicted_price_pi <- predict(model_hprice3, newdata = new_data, interval = "prediction", level = 0.95)
+print(predicted_price_pi)
+```
+
+C9. NBASAL
+
+i) Estimate points to exper, age and coll. quad in exper; all oher level form. 
+
+```{r}
+data("nbasal")
+model_nbasal <- lm(points ~ exper + I(exper^2) + age + coll, data = nbasal)
+summary(model_nbasal)
+```
+
+ii) Holding college years and age fixed, at what value of experience does the next year of experience actually reduce points per game?
+
+```{r}
+
+-2.36363 / (2 * -0.07703 )
+```
+
+
+15.3 years of experience is the point at which the return to experience becomes negative.
+
+Yeah this makes sense
+
+iii) Why is coll neg and stat sig coeff?
+
+Typically because the best basketball players go pro after 1 year of college, so those with more years of college are likely to be less talented.
+
+iv) Add a quad in age to equation.
+
+```{r}
+data("nbasal")
+model_nbasal_2 <- lm(points ~ exper + I(exper^2) + age + I(age^2) + coll, data = nbasal)
+summary(model_nbasal_2)
+```
+
+No this isn't really needed. Because the coefficient on age is not stat sig, and the coefficient on age^2 is also not stat sig now. The implication is that age doesn't have a significant effect on points per game, so we don't need to add a quadratic term for age.
+
+And there isn't a point at which it stops helping. Younger players that are very talented perform very well, and their performance doesn't necessarily improve with age or increase with age and then start getting worse. 
+
+v) Now regress log(wage)
+
+```{r}
+model_nbasal_log <- lm(log(wage) ~ exper + I(exper^2) + age + coll, data = nbasal)
+summary(model_nbasal_log)
+```
+
+C10. Use BWGHT2
+i) Estimate $log(bwght) = \beta_0 + \beta_1 npvis + \beta_2 npvis^2 + u$
+
+```{r}
+data("bwght2")
+model_bwght2 <- lm(log(bwght) ~ npvis + I(npvis^2), data = bwght2)
+summary(model_bwght2)
+``` 
+
+
+Yes it is sig
+
+ii) Show prenatal visits that maxes log(bwght) is 22
+
+```{r}
+-.0189167 / (2 * -0.0004288)
+```
+
+```{r}
+data("bwght2")
+nrow(bwght2[bwght2$npvis >= 22,])
+```
+
+iii) It could make sense in that more than 22 prenatal visits could be a sign of complications with the pregnancy, which could lead to lower birth weight.
+
+
+iv) Add age to equation using a quad functional form. HOlding npvis fixed, at what age is birth weight maximized? What fraction of women in sample are older than optimal age?
+
+```{r} 
+data("bwght2")
+
+model_bwght2_age <- lm(log(bwght) ~ npvis + I(npvis^2) + mage + I(mage^2), data = bwght2)
+summary(model_bwght2_age)
+
+# Calculate the age that maximizes birth weight
+optimal_age <- -coef(model_bwght2_age)["mage"] / (2 * coef(model_bwght2_age)["I(mage^2)"])
+optimal_age
+
+# # Calculate the fraction of women older than the optimal age
+fraction_older <- mean(bwght2$mage > optimal_age)
+fraction_older
+```
+
+v) Does mother age and # of prenat visits explain a lot of variation in logbwght?
+R squared is very low, meaning not much variation is explained in log(bwght) by npvis and mage. This makes sense because there are likely many other factors that affect birth weight, such as genetics, nutrition, and overall health of the mother, that are not captured by just the number of prenatal visits and the mother's age.
+
+vi) Using quadratics, decide whether using nat log or level of bwght is better.
+```{r}
+model_bwght2_level <- lm(bwght ~ npvis + I(npvis^2) + mage + I(mage^2), data = bwght2)
+summary(model_bwght2_level)
+```
+
+No better. R-squared goes down when we use level. 
+
+C11. APPLE
+i) Run regression on ecolbs on ecoprc, egprc and report results. 
+
+```{r}
+data("apple")
+model_apple <- lm(ecolbs ~ ecoprc + regprc, data = apple)
+summary(model_apple)
+```
+
+ii) Are they stat sig? 
+
+Yes. 
+
+iii) What is range of fitted values for ecolbs? What fraction of sampole reports ecolbs = 0? Comment
+```{r}
+fitted_values <- fitted(model_apple)
+range_fitted <- range(fitted_values)
+fraction_zero <- mean(apple$ecolbs == 0) * 100
+print(range_fitted)
+print(fraction_zero)
+```
+
+iv) Not really? R-squared is 0.03641. 
+
+v) Add in variables 
+
+```{r}
+model_apple_full <- lm(ecolbs ~ ecoprc + regprc + faminc + hhsize + educ + age, data = apple)
+summary(model_apple_full)
+
+# Test joint significance of faminc, hhsize, educ, and age  
+library(car)
+linearHypothesis(model_apple_full, c("faminc=0", "hhsize=0", "educ=0", "age=0"))
+```
+
+vi) Regress ecolbs on ecoprc and eclbs on regprc. How do they compare to multiple? What's the correlation between ecoprc and regprc?
+```{r}
+model_apple_ecoprc <- lm(ecolbs ~ ecoprc, data = apple)
+summary(model_apple_ecoprc) 
+
+model_apple_regprc <- lm(ecolbs ~ regprc, data = apple)
+summary(model_apple_regprc) 
+
+correlation <- cor(apple$ecoprc, apple$regprc)
+print(correlation)
+```
+
+Alone they're pretty bad as predictors; barely statistically significant. And they correlate pretty highly with each other, which is likely why they both become stat sig when we put them in the same regression.
+
+vii) Consider a model like $ecolbs = \beta_0 + \beta_1 ecoprc + \beta_2 regprc + \beta_3 faminc + \beta_4 reglbs + u$
+
+From basic economic theory, which explanatory variable does not belong to the equation? When you drop the variables one at a time, do the sizes of adj R squareds affect your answer?
+
+```{r}
+model_apple_reglbs <- lm(ecolbs ~ ecoprc + regprc + faminc + reglbs, data = apple)
+summary(model_apple_reglbs)
+```
+faminc, as not stat sig at all. 
+
+```{r}
+model_apple_reglbs <- lm(ecolbs ~ ecoprc + regprc + faminc + reglbs, data = apple)
+summary(model_apple_reglbs)
+```
+Adj r-squared doesn't change much, which is quite low to begin with. 
+
+C12. 401KSUBS with fsize = 1 (single person households)
+i) How many ppl are 25
+
+```{r}
+data("k401ksubs")
+nrow(subset(`k401ksubs`, fsize == 1 & age == 25))
+```
+
+ii) what's the interpretation of B2?
+
+The estimated, controlled effect of age on nettfa. 
+
+```{r}
+model_k401ksubs <- lm(nettfa ~ age, data = subset(k401ksubs, fsize == 1))
+summary(model_k401ksubs)
+```
+
+It's stat sig!
+
+iii) Estimate the model 
+$$ nettfa = \beta_0 + \beta_1 inc + \beta_2 age + \beta_3 age^2 + u $$
+
+```{r}
+model_k401ksubs_full <- lm(nettfa ~ inc + age + I(age^2), data = subset(k401ksubs, fsize == 1))
+summary(model_k401ksubs_full)
+```
+It's suprisiing that age is negative but age^2 is positive. This implies that the relationship between age and nettfa is U-shaped, which is not what I would have expected. I would have expected a more linear relationship, where nettfa increases with age up to a certain point and then starts to decrease as people get older and start to draw down their retirement savings.
+
+iv) 
+```{r}
+model_k401ksubs_full <- lm(nettfa ~ inc + age + I((age-25)^2), data = subset(k401ksubs, fsize == 1))
+summary(model_k401ksubs_full)
+```
+
+Not really stat sig at all. 
+
+v) Set it to 0 and estimate the model 
+
+```{r}
+model_k401ksubs_full <- lm(nettfa ~ inc + I((age-25)^2), data = subset(k401ksubs, fsize == 1))
+summary(model_k401ksubs_full)
+```
+
+Sligthly better but not that much. 
+
+vi) For v set inc = 30 and graph relationship between nettfa and age but only for age >= 25. 
+```{r}
+library(ggplot2)
+age_seq <- seq(25, max(subset(k401ksubs, fsize == 1)$age), by = 1)
+predicted_nettfa <- predict(model_k401ksubs_full, newdata = data.frame(inc = 30, age = age_seq, `I((age - 25)^2)` = (age_seq - 25)^2))
+ggplot(data = data.frame(age = age_seq, predicted_nettfa = predicted_nettfa), aes(x = age, y = predicted_nettfa)) +
+  geom_line() +
+  labs(title = "Predicted Nettfa vs Age", x = "Age", y = "Predicted Nettfa") +
+  theme_minimal()
+```
+
+Bit of an exponential take off when inc = 30
+
+vii) Is including quadratic on inc necessary?
+```{r}
+model_k401ksubs_full_quad <- lm(nettfa ~ inc + I(inc^2) + I((age-25)^2), data = subset(k401ksubs, fsize == 1))
+summary(model_k401ksubs_full_quad)
+```
+
+No not necessary. The coefficient on inc^2 is not stat sig at all, and the coefficient on inc is still stat sig and positive, which suggests that the relationship between inc and nettfa is linear rather than quadratic.
+
+C13. Use data in MEAP00
+i) estimate model $math4 = \beta_0 + \beta_1 lexppp + \beta_2 lenroll + \beta_3 lunch + u$ 
+
+```{r}
+data("meap00_01")
+model_meap00 <- lm(math4 ~ lexppp + lenroll + lunch, data = meap00_01)
+summary(model_meap00)
+```
+
+
+Yes everything stat sig to 5% level
+
+ii) Obtain fitted values. What is range? How does it compare with range of actual data on math4?
+
+```{r}
+fitted_values_meap00 <- fitted(model_meap00)
+range_fitted_meap00 <- range(fitted_values_meap00)
+range_actual_meap00 <- range(meap00_01$math4)
+print(range_fitted_meap00)
+print(range_actual_meap00)
+```
+
+Range of fitted values is much smaller than range of actual values. 
+
+This means model not capturing much variation, which is reflected in the low R-squared. 
+
+iii) Obtain residuals. What is buliding code of schol with largest positive residual. Provide an interpretation. 
+
+```{r}
+residuals_meap00 <- residuals(model_meap00)
+max_residual <- max(residuals_meap00)
+
+school_max_residual <- meap00_01[residuals_meap00 == max_residual, ]
+print(school_max_residual$bcode)
+print(school_max_residual)
+print(max_residual)
+``` 
+
+Interpretation: school performed much better on math4 than predicted, as the residual was 51, which mean they 
+were predicted to score 51 percentage points lower on math4 than they actually did.
+
+There are possible other characteristics that are not captured in the model that could explain this, such as teacher quality, school management, or student demographics.
+
+
+iv) Add quads of all explanatory variables to the equation, and test for joint significance. Would you leave them in the model?
+
+```{r}
+model_meap00_quad <- lm(math4 ~ lexppp + I(lexppp^2) + lenroll + I(lenroll^2) + lunch + I(lunch^2), data = meap00_01)
+summary(model_meap00_quad) 
+library(car)
+linearHypothesis(model_meap00_quad, c("I(lexppp^2)=0", "I(lenroll^2)=0", "I(lunch^2)=0"))
+``` 
+
+Non eof them are stat sig. Joint significance also failed so don't think they're needed in the model. Qualitatively, why would there 
+be a diminishing effect of these factors? More students on free lunch should scale linearly, as shoudl the amount spent on students. 
+These shouldn't experience diminishing returns after a certain point (or suddenly get better as students get more hungry)
+
+v) Divide dependent variable and each explanatory variable by its sample standard deviation, and rerun the regression. 
+
+In terms of standard deviation units, which explanatory variable has the largest effect on math4? 
+
+```{r}
+meap00_01_scaled <- as.data.frame(scale(meap00_01[, c("math4", "lexppp", "lenroll", "lunch")]))
+colnames(meap00_01_scaled) <- c("math4_scaled", "lexppp_scaled", "lenroll_scaled", "lunch_scaled")
+model_meap00_scaled <- lm(math4_scaled ~ lexppp_scaled + lenroll_scaled + lunch_scaled, data = meap00_01_scaled)
+summary(model_meap00_scaled)
+```
+
+Lunch has the largest effect on math4. 
+
+C14. Use data in BENEFITS. School level cdata set at K-5 level. 
+
+i) regress lavgsal onb s and report results. 
+
+```{r}
+data("benefits")
+model_benefits <- lm(lavgsal ~ bs, data = benefits)
+summary(model_benefits)
+```
+
+# can reject bs = 0 against two sided at 5% level
+```{r}
+# Test H0: bs = -1
+coef_bs <- coef(model_benefits)["bs"]
+se_bs <- summary(model_benefits)$coefficients["bs", "Std. Error"]
+
+t_stat <- (coef_bs - (-1)) / se_bs
+p_value <- 2 * (1 - pt(abs(t_stat), df = model_benefits$df.residual))
+
+print(t_stat)
+print(p_value)
+```
+Can reject = 0 and can reject -1 which means can reject > -1 gbecause two sided trumps one sided. 
+
+ii) define lbs = log(bs). Range of lbs and standard dev. Compare to range and stand dev for bs. 
+
+```{r}
+benefits$lbs <- log(benefits$bs)
+range_lbs <- range(benefits$lbs)
+sd_lbs <- sd(benefits$lbs)
+range_bs <- range(benefits$bs)
+sd_bs <- sd(benefits$bs) 
+print(range_lbs)
+print(sd_lbs)
+print(range_bs)
+print(sd_bs)
+```
+
+Wider range and wider sd. 
+
+iii) regress lavgsal on lbs. Does it fit better
+
+```{r}
+data("benefits")
+
+model_benefits_lbs <- lm(lavgsal ~ log(bs), data = benefits)
+summary(model_benefits_lbs)
+```
+
+No it fits worse
+
+iv) Estimate equation $lavgsal = \beta_0 + \beta_1 bs + \beta_2 lenroll + \beta_3 lstaff + \beta_4 lunch + u$
+
+```{r}
+model_benefits_full <- lm(lavgsal ~ bs + lenroll + lstaff + lunch, data = benefits)
+summary(model_benefits_full)
+```
+
+It is actually now NOT rejected, meaning \beta_bs = 0 cannot be rejected! 
+
+This seems likely becausebenefits and salary in and of itself is probably colinear to the avg salary of a teacher, 
+and not part of the causal relationship. Adding variables that represent how well the school is doing (enrollment, lunch, total staff) probably add more stat sig explanatory power. 
+
+v) Interpret coefficient of lstaff. Why neg? 
+
+I guess if you have more staff per student then there's just less pie to go around. 
+
+vi) Add lunch^2. is it stat sig? Copmute turning point in quadratic, and show withi range of observed data. How many values of lunch are higher than the calculated turning point? 
+
+```{r}
+model_benefits_full_quad <- lm(lavgsal ~ bs + lenroll + lstaff + lunch + I(lunch^2), data = benefits)
+summary(model_benefits_full_quad)
+
+```
+
+It is stat sig. 
+
+Compute turning point:
+```{r}
+coef_lunch <- coef(model_benefits_full_quad)["lunch"]
+coef_lunch_sq <- coef(model_benefits_full_quad)["I(lunch^2)"]
+turning_point <- -coef_lunch / (2 * coef_lunch_sq)
+print(turning_point)
+```
+
+Turning point is 56.63%
+
+```{r}
+nrow(benefits[benefits$lunch > turning_point,])
+```
+
+418 higher. 
+
+vii) Based on vi, how do teacher salaries relate to school poverty rates. In terms of teacher salary, and holding other factors fixed, is it better to teach at a school with lunch = 0, lunch = 50 or lunch = 100. 
+
+```{r}
+# Create a sequence of lunch values
+lunch_seq <- seq(0, 100, by = 1)
+predicted_lavgsal <- predict(model_benefits_full_quad, 
+               newdata = data.frame(bs = mean(benefits$bs),
+                          lenroll = mean(benefits$lenroll),
+                          lstaff = mean(benefits$lstaff),
+                          lunch = lunch_seq))
+
+# Plot
+plot(lunch_seq, predicted_lavgsal, type = "l", 
+   xlab = "Lunch (% free/reduced)", ylab = "Predicted log(avgsal)",
+   main = "Teacher Salary vs School Poverty Rate")
+abline(v = turning_point, col = "red", lty = 2, label = "Turning point")
+```
+
+Teachers wages are highest at no povert and high poverty. Highest at no poverty, then they start dropping off, then they pick back up after 56.3% and start going up. 
+
